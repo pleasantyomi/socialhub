@@ -1,13 +1,12 @@
-import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import MainLayout from "@/components/layout/main-layout";
 import PostDetail from "@/components/post/post-detail";
 import CommentSection from "@/components/comment/comment-section";
 import { getPosts } from "@/lib/data";
-import { type Metadata, type ResolvingMetadata  } from "next";
+import { type Metadata } from "next";
 
 interface PostPageProps {
-  params : Promise<{id: string}>;
+  params: { id: string };
 }
 
 export const metadata: Metadata = {
@@ -15,10 +14,10 @@ export const metadata: Metadata = {
   description: "View post and comments",
 };
 
-export default async function PostPage({ params }: PostPageProps ) {
-  const id = await params;
+export default async function PostPage({ params }: PostPageProps) {
+  const { id } = params;
   const posts = getPosts();
-  const post = posts.find((post) => post.id === params.id);
+  const post = posts.find((post) => post.id === id);
 
   if (!post) {
     notFound();
@@ -28,7 +27,7 @@ export default async function PostPage({ params }: PostPageProps ) {
     <MainLayout>
       <div className="max-w-3xl mx-auto px-4 py-6">
         <PostDetail post={post} />
-        <CommentSection postId={params.id} />
+        <CommentSection postId={id} />
       </div>
     </MainLayout>
   );
