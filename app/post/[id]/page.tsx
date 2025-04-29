@@ -4,13 +4,19 @@ import MainLayout from "@/components/layout/main-layout";
 import PostDetail from "@/components/post/post-detail";
 import CommentSection from "@/components/comment/comment-section";
 import { getPosts } from "@/lib/data";
+import { type Metadata, type ResolvingMetadata  } from "next";
+
+interface PostPageProps {
+  params : Promise<{id: string}>;
+}
 
 export const metadata: Metadata = {
   title: "Post | SocialHub",
   description: "View post and comments",
 };
 
-export default function PostPage({ params }: { params: { id: string } }) {
+export default async function PostPage({ params }: PostPageProps ) {
+  const id = await params;
   const posts = getPosts();
   const post = posts.find((post) => post.id === params.id);
 
