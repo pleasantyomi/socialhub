@@ -132,11 +132,11 @@ export default function AuthPage() {
             <span className="mx-4 flex-shrink text-xs text-muted-foreground">OR CONTINUE WITH</span>
             <div className="flex-grow border-t"></div>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" className="w-full">
+          <div className="flex justify-center gap-2">
+            <Button variant="outline" className="lg:w-full">
               Google
             </Button>
-            <Button variant="outline" className="w-full">
+            <Button variant="outline" className="lg:w-full">
               Facebook
             </Button>
           </div>
