@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 
 export default async function PostPage({ params }: PostPageProps) {
   const { id } = params;
-  const posts = getPosts();
+  const posts = await getPosts(); // ✅ FIXED
   const post = posts.find((post) => post.id === id);
 
   if (!post) {
