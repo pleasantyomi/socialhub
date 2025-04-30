@@ -6,7 +6,7 @@ import { getPosts } from "@/lib/data";
 import { type Metadata } from "next";
 
 interface PostPageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export const metadata: Metadata = {
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 };
 
 export default async function PostPage({ params }: PostPageProps) {
-  const { id } = params;
+  const { id } = await params;
   const posts = await getPosts(); // ✅ FIXED
   const post = posts.find((post) => post.id === id);
 
