@@ -16,7 +16,7 @@ export default function MarketplaceGrid() {
                 src={item.image || "/placeholder.svg"}
                 alt={item.title}
                 fill
-                className="object-cover"
+                className="object-cover w-full h-full object-center"
               />
             </div>
             <CardContent className="p-4">
