@@ -6,7 +6,7 @@ import { getPosts } from "@/lib/data";
 import { type Metadata } from "next";
 
 interface PostPageProps {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }
 
 export const metadata: Metadata = {

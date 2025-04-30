@@ -8,8 +8,8 @@ import {
   Home,
   LogOut,
   Menu,
-  Search,
   MessageSquare,
+  Search,
   ShoppingBag,
   User,
 } from "lucide-react";
@@ -33,7 +33,6 @@ export default function MainLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-slate-50">
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="flex justify-between items-center px-4 md:px-6"></div>
         <div className="flex justify-between h-14 items-center px-4 md:px-6">
           <div className="flex items-center gap-2 md:gap-4">
             <Sheet>
@@ -45,13 +44,13 @@ export default function MainLayout({ children }: { children: ReactNode }) {
               </SheetTrigger>
               <SheetContent
                 side="left"
-                className="w-[240px] sm:w-[300px] pl-4 pt-8 relative"
+                className="w-[240px] sm:w-[300px] pt-12 pl-5"
               >
-                <SheetTitle className="sr-only">Side bar</SheetTitle>
-                <nav className="flex flex-col gap-4 mt-8">
+                <SheetTitle className="sr-only">side bar</SheetTitle>
+                <nav className="flex flex-col gap-4">
                   <Link
                     href="/feed"
-                    className="flex items-center gap-2 text-md font-semibold"
+                    className="flex items-center gap-2 text-base font-semibold"
                   >
                     <Home
                       className={`h-4 w-4 ${
@@ -62,7 +61,7 @@ export default function MainLayout({ children }: { children: ReactNode }) {
                   </Link>
                   <Link
                     href="/marketplace"
-                    className="flex items-center gap-2 text-md font-semibold"
+                    className="flex items-center gap-2 text-base font-semibold"
                   >
                     <ShoppingBag
                       className={`h-4 w-4 ${
@@ -73,7 +72,7 @@ export default function MainLayout({ children }: { children: ReactNode }) {
                   </Link>
                   <Link
                     href="/profile"
-                    className="flex items-center gap-2 text-md font-semibold"
+                    className="flex items-center gap-2 text-base font-semibold"
                   >
                     <User
                       className={`h-4 w-4 ${
@@ -83,94 +82,82 @@ export default function MainLayout({ children }: { children: ReactNode }) {
                     Profile
                   </Link>
                   <Link
-                    href="/"
-                    className="flex items-center gap-2 text-md font-semibold"
+                    href="/messages"
+                    className="flex items-center gap-2 text-base font-semibold"
                   >
                     <MessageSquare
                       className={`h-4 w-4 ${
-                        isActive("/") ? "text-primary" : ""
+                        isActive("/messages") ? "text-primary" : ""
                       }`}
                     />
                     Messages
                   </Link>
                   <Link
-                    href="/"
-                    className="flex items-center gap-2 text-md font-semibold"
+                    href="/notifications"
+                    className="flex items-center gap-2 text-base font-semibold"
                   >
                     <Bell
                       className={`h-4 w-4 ${
-                        isActive("/") ? "text-primary" : ""
+                        isActive("/notifications") ? "text-primary" : ""
                       }`}
                     />
                     Notifications
                   </Link>
                 </nav>
-                <div className="absolute bottom-6 left-4">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="flex items-center"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    <span className="">Log out</span>
-                  </Button>
-                </div>
               </SheetContent>
             </Sheet>
-
             <Link href="/feed" className="font-bold text-xl">
               SocialHub
             </Link>
-
-            <div className="relative w-full max-w-sm hidden md:block">
+          </div>
+          <div className="hidden md:flex md:flex-1 items-center gap-4 md:gap-6 lg:gap-10">
+            <div className="relative w-full max-w-sm ml-4">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 type="search"
                 placeholder="Search..."
-                className="w-auto pl-8"
+                className="w-auto pl-8 "
               />
             </div>
+            <nav className="flex items-center gap-4 md:gap-6">
+              <Link
+                href="/feed"
+                className={`flex items-center gap-2 ${
+                  isActive("/feed") ? "text-primary" : ""
+                }`}
+              >
+                <Home className="h-5 w-5" />
+                <span className="hidden lg:inline">Feed</span>
+              </Link>
+              <Link
+                href="/marketplace"
+                className={`flex items-center gap-2 ${
+                  isActive("/marketplace") ? "text-primary" : ""
+                }`}
+              >
+                <ShoppingBag className="h-5 w-5" />
+                <span className="hidden lg:inline">Marketplace</span>
+              </Link>
+              <Link
+                href="/messages"
+                className={`flex items-center gap-2 ${
+                  isActive("/messages") ? "text-primary" : ""
+                }`}
+              >
+                <MessageSquare className="h-5 w-5" />
+                <span className="hidden lg:inline">Messages</span>
+              </Link>
+              <Link
+                href="/notifications"
+                className={`flex items-center gap-2 ${
+                  isActive("/notifications") ? "text-primary" : ""
+                }`}
+              >
+                <Bell className="h-5 w-5" />
+                <span className="hidden lg:inline">Notifications</span>
+              </Link>
+            </nav>
           </div>
-
-          <nav className="hidden lg:flex items-center gap-4 md:gap-6">
-            <Link
-              href="/feed"
-              className={`flex items-center gap-2 ${
-                isActive("/feed") ? "text-primary" : ""
-              }`}
-            >
-              <Home className="h-4 w-4" />
-              <span className="hidden lg:inline">Feed</span>
-            </Link>
-            <Link
-              href="/marketplace"
-              className={`flex items-center gap-2 ${
-                isActive("/marketplace") ? "text-primary" : ""
-              }`}
-            >
-              <ShoppingBag className="h-4 w-4" />
-              <span className="hidden lg:inline">Marketplace</span>
-            </Link>
-            <Link
-              href="/"
-              className={`flex items-center gap-2 ${
-                isActive("/") ? "text-primary" : ""
-              }`}
-            >
-              <MessageSquare className="h-4 w-4" />
-              <span className="hidden lg:inline">Messages</span>
-            </Link>
-            <Link
-              href="/"
-              className={`flex items-center gap-2 ${
-                isActive("/") ? "text-primary" : ""
-              }`}
-            >
-              <Bell className="h-4 w-4" />
-              <span className="hidden lg:inline">Notifications</span>
-            </Link>
-          </nav>
-
           <div className="flex items-center gap-2">
             <Link href="/profile">
               <Avatar>
@@ -189,7 +176,6 @@ export default function MainLayout({ children }: { children: ReactNode }) {
           </div>
         </div>
       </header>
-
       <main>{children}</main>
     </div>
   );
