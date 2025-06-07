@@ -6,8 +6,8 @@ import { createApiResponse, handleApiError, validateUser } from '@/lib/api-utils
 
 // GET messages for a conversation
 export async function GET(request: Request) {
-  return validateUser(async () => {
-    const session = await getServerSession(authOptions);
+  try {
+    const session = await validateUser();
     const { searchParams } = new URL(request.url);
     const conversationId = searchParams.get('conversationId');
 
@@ -16,8 +16,8 @@ export async function GET(request: Request) {
       const conversations = await prisma.conversation.findMany({
         where: {
           OR: [
-            { user1Id: session!.user!.id },
-            { user2Id: session!.user!.id },
+            { user1Id: session.user.id },
+            { user2Id: session.user.id },
           ],
         },
         include: {
@@ -60,7 +60,7 @@ export async function GET(request: Request) {
       }
 
       // Check if user is part of the conversation
-      if (conversation.user1Id !== session!.user!.id && conversation.user2Id !== session!.user!.id) {
+      if (conversation.user1Id !== session.user.id && conversation.user2Id !== session.user.id) {
         return createApiResponse({
           error: 'Unauthorized',
           status: 403,
@@ -85,13 +85,13 @@ export async function GET(request: Request) {
         status: 200,
       });
     }
-  });
+  } catch (error) {
+    return handleApiError(error);
+  }
 }
-
-// SEND a new message
 export async function POST(request: Request) {
-  return validateUser(async () => {
-    const session = await getServerSession(authOptions);
+  try {
+    const session = await validateUser();
     const json = await request.json();
     const { recipientId, content } = json;
 
@@ -127,14 +127,14 @@ export async function POST(request: Request) {
         OR: [
           {
             AND: [
-              { user1Id: session!.user!.id },
+              { user1Id: session.user.id },
               { user2Id: recipientId },
             ],
           },
           {
             AND: [
               { user1Id: recipientId },
-              { user2Id: session!.user!.id },
+              { user2Id: session.user.id },
             ],
           },
         ],
@@ -144,7 +144,7 @@ export async function POST(request: Request) {
     if (!conversation) {
       conversation = await prisma.conversation.create({
         data: {
-          user1Id: session!.user!.id,
+          user1Id: session.user.id,
           user2Id: recipientId,
         },
       });
@@ -154,7 +154,7 @@ export async function POST(request: Request) {
     const message = await prisma.message.create({
       data: {
         content,
-        senderId: session!.user!.id,
+        senderId: session.user.id,
         conversationId: conversation.id,
       },
       include: {
@@ -172,5 +172,7 @@ export async function POST(request: Request) {
       data: message,
       status: 201,
     });
-  });
+  } catch (error) {
+    return handleApiError(error);
+  }
 }

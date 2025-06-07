@@ -1,14 +1,11 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../../auth/[...nextauth]/route';
 import prisma from '@/lib/prisma';
 import { createApiResponse, handleApiError, validateUser } from '@/lib/api-utils';
 import { NotificationType } from '@/lib/types';
 
 // GET notifications
 export async function GET(request: Request) {
-  return validateUser(async () => {
-    const session = await getServerSession(authOptions);
+  try {
+    const session = await validateUser();
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
@@ -54,13 +51,15 @@ export async function GET(request: Request) {
       },
       status: 200,
     });
-  });
+  } catch (error: any) {
+    return handleApiError(error);
+  }
 }
 
 // Mark notifications as read
 export async function PUT(request: Request) {
-  return validateUser(async () => {
-    const session = await getServerSession(authOptions);
+  try {
+    const session = await validateUser();
     const json = await request.json();
     const { notificationIds } = json;
 
@@ -85,12 +84,13 @@ export async function PUT(request: Request) {
       data: { success: true },
       status: 200,
     });
-  });
-}
-
+  } catch (error: any) {
+    return handleApiError(error);
+  }
 // Create a notification
 export async function POST(request: Request) {
-  return validateUser(async () => {
+  try {
+    const session = await validateUser();
     const json = await request.json();
     const { userId, type, targetId, content } = json;
 
@@ -118,5 +118,8 @@ export async function POST(request: Request) {
       data: notification,
       status: 201,
     });
-  });
+  } catch (error: any) {
+    return handleApiError(error);
+  }
 }
+

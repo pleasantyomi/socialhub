@@ -6,8 +6,8 @@ import { createApiResponse, handleApiError, validateUser } from '@/lib/api-utils
 
 // GET user profile
 export async function GET(request: Request) {
-  return validateUser(async () => {
-    const session = await getServerSession(authOptions);
+  try {
+    const session = await validateUser();
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId') || session!.user!.id;
 
@@ -71,15 +71,17 @@ export async function GET(request: Request) {
       },
       status: 200,
     });
-  });
+  } catch (error: any) {
+    return handleApiError(error);
+  }
 }
 
 // UPDATE user profile
 export async function PUT(request: Request) {
-  return validateUser(async () => {
-    const session = await getServerSession(authOptions);
+  try {
+    const session = await validateUser();
     const json = await request.json();
-    
+
     // Validate input
     if (json.name && json.name.length > 50) {
       return createApiResponse({
@@ -128,13 +130,13 @@ export async function PUT(request: Request) {
       data: updatedProfile,
       status: 200,
     });
-  });
+  } catch (error: any) {
+    return handleApiError(error);
+  }
 }
-
-// Follow/Unfollow a user
 export async function POST(request: Request) {
-  return validateUser(async () => {
-    const session = await getServerSession(authOptions);
+  try {
+    const session = await validateUser();
     const json = await request.json();
     const { targetUserId, action } = json;
 
@@ -190,5 +192,7 @@ export async function POST(request: Request) {
       data: { success: true },
       status: 200,
     });
-  });
+  } catch (error: any) {
+    return handleApiError(error);
+  }
 }

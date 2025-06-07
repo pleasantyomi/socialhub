@@ -1,14 +1,22 @@
-import { Post, User, Comment, MarketplaceListing, Message, Conversation } from '@prisma/client';
+import type { Post, User, Comment, Prisma, MarketplaceListing, Message, Conversation } from '@prisma/client';
 
-export type PostWithAuthor = Post & {
-  author: User;
-  comments: CommentWithAuthor[];
-  likes: Like[];
-};
+export type PostWithAuthor = Prisma.PostGetPayload<{
+  include: {
+    author: true;
+    comments: {
+      include: {
+        author: true;
+      };
+    };
+    likes: true;
+  };
+}>;
 
-export type CommentWithAuthor = Comment & {
-  author: User;
-};
+export type CommentWithAuthor = Prisma.CommentGetPayload<{
+  include: {
+    author: true;
+  };
+}>;
 
 export type Like = {
   id: string;
@@ -17,44 +25,83 @@ export type Like = {
   createdAt: Date;
 };
 
-export interface TrendingTopic {
-  category: string;
-  title: string;
-  posts: number;
-}
+export type MarketplaceListingWithSeller = Prisma.MarketplaceListingGetPayload<{
+  include: {
+    seller: true;
+  };
+}>;
 
-export type MarketplaceListingWithSeller = MarketplaceListing & {
-  seller: User;
-};
+export type ExtendedUserProfile = Prisma.UserGetPayload<{
+  include: {
+    posts: {
+      include: {
+        author: true;
+        comments: {
+          include: {
+            author: true;
+          };
+        };
+        likes: true;
+      };
+    };
+    followers: true;
+    following: true;
+    listings: {
+      include: {
+        seller: true;
+      };
+    };
+  };
+}>;
 
-export type ExtendedUserProfile = User & {
-  posts: PostWithAuthor[];
-  followers: User[];
-  following: User[];
-  listings: MarketplaceListingWithSeller[];
-};
+export type MessageWithSender = Prisma.MessageGetPayload<{
+  include: {
+    sender: true;
+  };
+}>;
 
-// New interfaces for messages and notifications
-
-export type MessageWithSender = Message & {
-  sender: User;
-};
-
-export type ConversationWithUsers = Conversation & {
-  user1: User;
-  user2: User;
-  messages: MessageWithSender[];
-};
+export type ConversationWithUsers = Prisma.ConversationGetPayload<{
+  include: {
+    user1: true;
+    user2: true;
+    messages: {
+      include: {
+        sender: true;
+      };
+    };
+  };
+}>;
 
 export type NotificationType = 'like' | 'comment' | 'follow' | 'mention' | 'share';
 
-export interface Notification {
-  id: string;
-  type: NotificationType;
-  userId: string;
-  user: User;
-  targetId: string;
-  content: string;
-  createdAt: Date;
-  read: boolean;
-}
+export type Notification = Prisma.NotificationGetPayload<{
+  include: {
+    user: true;
+  };
+}>;
+
+export type PostWithAuthorAndCounts = Prisma.PostGetPayload<{
+  include: {
+    author: true;
+    comments: {
+      include: {
+        author: true;
+      };
+    };
+    _count: {
+      select: {
+        comments: true;
+        likes: true;
+      };
+    };
+    likes: {
+      select: {
+        userId: true;
+      };
+    };
+  };
+}>;
+
+export type PostResponse = Omit<PostWithAuthorAndCounts, 'likes'> & {
+  isLiked: boolean;
+};

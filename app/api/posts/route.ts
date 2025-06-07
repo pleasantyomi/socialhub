@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import type { PostResponse, PostWithAuthorAndCounts } from '@/lib/types';
 import prisma from '@/lib/prisma';
 import {
   createApiResponse,
@@ -56,14 +57,16 @@ export async function GET(request: Request) {
         take,
       }),
       prisma.post.count(),
-    ]);
+    ]) as [PostWithAuthorAndCounts[], number];
+
+    const postsWithLikeStatus: PostResponse[] = posts.map(post => ({
+      ...post,
+      isLiked: post.likes.length > 0,
+      likes: undefined,
+    }));
 
     return {
-      posts: posts.map(post => ({
-        ...post,
-        isLiked: post.likes.length > 0,
-        likes: undefined, // Remove the likes array from the response
-      })),
+      posts: postsWithLikeStatus,
       pagination: {
         total,
         pages: Math.ceil(total / take),
@@ -78,12 +81,12 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   return withErrorHandling(async () => {
     const session = await validateUser();
-    const json = await request.json();
     
     if (!session.user?.id) {
       throw new ApiError(401, 'User ID not found in session');
     }
 
+    const json = await request.json();
     const validatedData = postSchema.parse(json);
 
     const post = await prisma.post.create({
@@ -100,12 +103,21 @@ export async function POST(request: Request) {
             likes: true,
           },
         },
+        likes: {
+          select: {
+            userId: true,
+          },
+        },
       },
-    });
+    }) as PostWithAuthorAndCounts;
 
-    return {
-      ...post,
+    // Remove likes from the response
+    const { likes, ...postWithoutLikes } = post;
+    const postResponse: PostResponse = {
+      ...postWithoutLikes,
       isLiked: false,
     };
+
+    return postResponse;
   });
 }
