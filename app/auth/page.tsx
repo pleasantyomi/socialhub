@@ -42,7 +42,7 @@ export default function AuthPage() {
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold">Welcome to SocialHub</CardTitle>
+          <CardTitle className="text-2xl font-bold">Welcome to unify</CardTitle>
           <CardDescription>Connect with friends and the world around you</CardDescription>
         </CardHeader>
         <CardContent>

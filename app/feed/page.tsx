@@ -5,7 +5,7 @@ import SidebarLeft from "@/components/layout/sidebar-left";
 import SidebarRight from "@/components/layout/sidebar-right";
 
 export const metadata: Metadata = {
-  title: "Feed | SocialHub",
+  title: "Feed | unify",
   description: "Your social media feed",
 };
 

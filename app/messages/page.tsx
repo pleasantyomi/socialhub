@@ -4,7 +4,7 @@ import MessageSidebar from "@/components/messages/message-sidebar";
 import MessageThread from "@/components/messages/message-thread";
 
 export const metadata: Metadata = {
-  title: "Messages | SocialHub",
+  title: "Messages | unify",
   description: "Your conversations",
 };
 

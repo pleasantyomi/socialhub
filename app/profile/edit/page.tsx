@@ -3,7 +3,7 @@ import MainLayout from "@/components/layout/main-layout";
 import ProfileEditForm from "@/components/profile/profile-edit-form";
 
 export const metadata: Metadata = {
-  title: "Edit Profile | SocialHub",
+  title: "Edit Profile | unify",
   description: "Edit your profile",
 };
 

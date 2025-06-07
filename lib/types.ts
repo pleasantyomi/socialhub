@@ -1,32 +1,21 @@
-export interface User {
-  id: string;
-  name: string;
-  username: string;
-  avatar: string;
-}
+import { Post, User, Comment, MarketplaceListing, Message, Conversation } from '@prisma/client';
 
-export interface Author {
-  name: string;
-  avatar: string;
-}
+export type PostWithAuthor = Post & {
+  author: User;
+  comments: CommentWithAuthor[];
+  likes: Like[];
+};
 
-export interface Comment {
-  id: string;
-  author: Author;
-  content: string;
-  timestamp: string;
-  likes: number;
-}
+export type CommentWithAuthor = Comment & {
+  author: User;
+};
 
-export interface Post {
+export type Like = {
   id: string;
-  author: Author;
-  content: string;
-  image?: string;
-  timestamp: string;
-  likes: number;
-  comments: Comment[];
-}
+  userId: string;
+  postId: string;
+  createdAt: Date;
+};
 
 export interface TrendingTopic {
   category: string;
@@ -34,65 +23,38 @@ export interface TrendingTopic {
   posts: number;
 }
 
-export interface MarketplaceItem {
-  id: string;
-  title: string;
-  price: number;
-  image: string;
-  location: string;
-  listedTime: string;
-  category: string;
-}
+export type MarketplaceListingWithSeller = MarketplaceListing & {
+  seller: User;
+};
 
-export interface UserProfile {
-  name: string;
-  username: string;
-  avatar: string;
-  coverImage: string;
-  bio: string;
-  location: string;
-  website?: string;
-  joinDate: string;
-  following: number;
-  followers: number;
-}
+export type ExtendedUserProfile = User & {
+  posts: PostWithAuthor[];
+  followers: User[];
+  following: User[];
+  listings: MarketplaceListingWithSeller[];
+};
 
 // New interfaces for messages and notifications
 
-export interface ConversationUser {
-  name: string;
-  avatar: string;
-  isOnline: boolean;
-  lastSeen: string;
-}
+export type MessageWithSender = Message & {
+  sender: User;
+};
 
-export interface Message {
-  content: string;
-  time: string;
-  isMe: boolean;
-}
+export type ConversationWithUsers = Conversation & {
+  user1: User;
+  user2: User;
+  messages: MessageWithSender[];
+};
 
-export interface Conversation {
-  id: string;
-  user: ConversationUser;
-  lastMessage: string;
-  lastMessageTime: string;
-  unread: boolean;
-  messages: Message[];
-}
-
-export interface NotificationUser {
-  name: string;
-  avatar: string;
-}
+export type NotificationType = 'like' | 'comment' | 'follow' | 'mention' | 'share';
 
 export interface Notification {
   id: string;
-  user: NotificationUser;
-  type: "like" | "comment" | "follow" | "mention" | "share";
-  action: string;
-  target: string;
+  type: NotificationType;
+  userId: string;
+  user: User;
+  targetId: string;
   content: string;
-  time: string;
+  createdAt: Date;
   read: boolean;
 }

@@ -1,0 +1,132 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  bio          String?
+  location     String?
+  website      String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Social connections
+  posts         Post[]
+  comments      Comment[]
+  likes         Like[]
+  followers     Follows[] @relation("following")
+  following     Follows[] @relation("follower")
+  
+  // Marketplace
+  listings      MarketplaceListing[]
+  
+  // Messages
+  sentMessages     Message[]        @relation("sender")
+  conversations1   Conversation[]   @relation("user1")
+  conversations2   Conversation[]   @relation("user2")
+  
+  // Notifications
+  notifications    Notification[]
+}
+
+model Post {
+  id        String    @id @default(cuid())
+  content   String
+  image     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  authorId  String
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments  Comment[]
+  likes     Like[]
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+}
+
+model Follows {
+  followerId  String
+  follower    User     @relation("follower", fields: [followerId], references: [id])
+  followingId String
+  following   User     @relation("following", fields: [followingId], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@id([followerId, followingId])
+}
+
+model MarketplaceListing {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  price       Float
+  category    String
+  images      String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  sellerId    String
+  seller      User     @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+}
+
+model Conversation {
+  id        String    @id @default(cuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  user1Id   String
+  user1     User      @relation("user1", fields: [user1Id], references: [id])
+  user2Id   String
+  user2     User      @relation("user2", fields: [user2Id], references: [id])
+  messages  Message[]
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  content        String
+  createdAt      DateTime     @default(now())
+  senderId       String
+  sender         User         @relation("sender", fields: [senderId], references: [id])
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  type      String   // 'like' | 'comment' | 'follow' | 'mention' | 'share'
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  targetId  String   // ID of the post, comment, or user that the notification is about
+  content   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

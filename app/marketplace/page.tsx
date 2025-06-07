@@ -4,7 +4,7 @@ import MarketplaceGrid from "@/components/marketplace/marketplace-grid";
 import MarketplaceFilters from "@/components/marketplace/marketplace-filters";
 
 export const metadata: Metadata = {
-  title: "Marketplace | SocialHub",
+  title: "Marketplace | unify",
   description: "Buy and sell items",
 };
 

@@ -107,7 +107,7 @@ export default function MainLayout({ children }: { children: ReactNode }) {
               </SheetContent>
             </Sheet>
             <Link href="/feed" className="font-bold text-xl">
-              SocialHub
+              unify
             </Link>
           </div>
           <div className="hidden md:flex md:flex-1 items-center gap-4 md:gap-6 lg:gap-10">

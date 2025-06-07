@@ -4,7 +4,7 @@ import NotificationList from "@/components/notifications/notification-list";
 import NotificationFilters from "@/components/notifications/notification-filters";
 
 export const metadata: Metadata = {
-  title: "Notifications | SocialHub",
+  title: "Notifications | unify",
   description: "Your notifications",
 };
 

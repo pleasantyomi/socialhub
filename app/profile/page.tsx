@@ -4,7 +4,7 @@ import ProfileHeader from "@/components/profile/profile-header";
 import ProfileTabs from "@/components/profile/profile-tabs";
 
 export const metadata: Metadata = {
-  title: "Profile | SocialHub",
+  title: "Profile | unify",
   description: "Your profile",
 };
 

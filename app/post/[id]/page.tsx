@@ -10,7 +10,7 @@ interface PostPageProps {
 }
 
 export const metadata: Metadata = {
-  title: "Post | SocialHub",
+  title: "Post | unify",
   description: "View post and comments",
 };
 

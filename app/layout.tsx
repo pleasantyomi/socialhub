@@ -8,8 +8,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "socialhub",
-  description: "socialhub is a social media platform for everyone",
+  title: "unify",
+  description: "unify is a social media platform for university students",
 };
 
 export default function RootLayout({
