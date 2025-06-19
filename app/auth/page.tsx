@@ -1,41 +1,120 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { signIn } from "next-auth/react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
-import { AtSign, Lock, User } from "lucide-react"
+import { AtSign, Lock, User, Github, Mail } from "lucide-react"
+import { useToast } from "@/components/ui/use-toast"
 
 export default function AuthPage() {
   const router = useRouter()
+  const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsLoading(true)
 
-    // Simulate authentication
-    setTimeout(() => {
+    const formData = new FormData(e.currentTarget)
+    const email = formData.get('email') as string
+    const password = formData.get('password') as string
+
+    try {
+      const result = await signIn('credentials', {
+        email,
+        password,
+        redirect: false,
+      })
+
+      if (result?.error) {
+        toast({
+          variant: "destructive",
+          title: "Login failed",
+          description: result.error,
+        })
+      } else {
+        router.push("/feed")
+        router.refresh()
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Login failed",
+        description: "Something went wrong. Please try again.",
+      })
+    } finally {
       setIsLoading(false)
-      router.push("/feed")
-    }, 1500)
+    }
   }
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsLoading(true)
 
-    // Simulate registration
-    setTimeout(() => {
+    const formData = new FormData(e.currentTarget)
+    const email = formData.get('signup-email') as string
+    const password = formData.get('signup-password') as string
+    const name = formData.get('name') as string
+
+    try {
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, name }),
+      })
+
+      if (!response.ok) {
+        const error = await response.text()
+        throw new Error(error)
+      }
+
+      // After successful signup, log the user in
+      const result = await signIn('credentials', {
+        email,
+        password,
+        redirect: false,
+      })
+
+      if (result?.error) {
+        toast({
+          variant: "destructive",
+          title: "Login failed",
+          description: result.error,
+        })
+      } else {
+        router.push("/feed")
+        router.refresh()
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Signup failed",
+        description: error instanceof Error ? error.message : "Something went wrong. Please try again.",
+      })
+    } finally {
       setIsLoading(false)
-      router.push("/feed")
-    }, 1500)
+    }
+  }
+
+  const handleSocialLogin = async (provider: string) => {
+    setIsLoading(true)
+    try {
+      await signIn(provider, { callbackUrl: "/feed" })
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: `${provider} login failed`,
+        description: "Something went wrong. Please try again.",
+      })
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -46,6 +125,36 @@ export default function AuthPage() {
           <CardDescription>Connect with friends and the world around you</CardDescription>
         </CardHeader>
         <CardContent>
+          <div className="space-y-4 mb-4">
+            <Button 
+              variant="outline" 
+              type="button" 
+              className="w-full" 
+              onClick={() => handleSocialLogin('google')}
+              disabled={isLoading}
+            >
+              <Mail className="mr-2 h-4 w-4" />
+              Continue with Google
+            </Button>
+            <Button 
+              variant="outline" 
+              type="button" 
+              className="w-full" 
+              onClick={() => handleSocialLogin('github')}
+              disabled={isLoading}
+            >
+              <Github className="mr-2 h-4 w-4" />
+              Continue with GitHub
+            </Button>
+          </div>
+          <div className="relative mb-4">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white px-2 text-muted-foreground">Or continue with</span>
+            </div>
+          </div>
           <Tabs defaultValue="login" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="login">Login</TabsTrigger>
@@ -57,7 +166,7 @@ export default function AuthPage() {
                   <Label htmlFor="email">Email</Label>
                   <div className="relative">
                     <AtSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input id="email" placeholder="name@example.com" type="email" className="pl-10" required />
+                    <Input id="email" name="email" placeholder="name@example.com" type="email" className="pl-10" required />
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -69,7 +178,7 @@ export default function AuthPage() {
                   </div>
                   <div className="relative">
                     <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input id="password" type="password" className="pl-10" required />
+                    <Input id="password" name="password" type="password" className="pl-10" required />
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -89,35 +198,22 @@ export default function AuthPage() {
                   <Label htmlFor="name">Full Name</Label>
                   <div className="relative">
                     <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input id="name" placeholder="John Doe" className="pl-10" required />
+                    <Input id="name" name="name" placeholder="John Doe" className="pl-10" required />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-email">Email</Label>
                   <div className="relative">
                     <AtSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input id="signup-email" placeholder="name@example.com" type="email" className="pl-10" required />
+                    <Input id="signup-email" name="signup-email" placeholder="name@example.com" type="email" className="pl-10" required />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-password">Password</Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input id="signup-password" type="password" className="pl-10" required />
+                    <Input id="signup-password" name="signup-password" type="password" className="pl-10" required />
                   </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox id="terms" required />
-                  <Label htmlFor="terms" className="text-sm font-normal">
-                    I agree to the{" "}
-                    <Button variant="link" className="p-0 h-auto text-sm">
-                      Terms of Service
-                    </Button>{" "}
-                    and{" "}
-                    <Button variant="link" className="p-0 h-auto text-sm">
-                      Privacy Policy
-                    </Button>
-                  </Label>
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? "Creating account..." : "Create account"}
@@ -126,21 +222,6 @@ export default function AuthPage() {
             </TabsContent>
           </Tabs>
         </CardContent>
-        <CardFooter className="flex flex-col space-y-4">
-          <div className="relative flex items-center">
-            <div className="flex-grow border-t"></div>
-            <span className="mx-4 flex-shrink text-xs text-muted-foreground">OR CONTINUE WITH</span>
-            <div className="flex-grow border-t"></div>
-          </div>
-          <div className="flex justify-center gap-2">
-            <Button variant="outline" className="lg:w-full">
-              Google
-            </Button>
-            <Button variant="outline" className="lg:w-full">
-              Facebook
-            </Button>
-          </div>
-        </CardFooter>
       </Card>
     </div>
   )

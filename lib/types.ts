@@ -1,107 +1,25 @@
-import type { Post, User, Comment, Prisma, MarketplaceListing, Message, Conversation } from '@prisma/client';
+import { Database } from './supabase.types';
 
-export type PostWithAuthor = Prisma.PostGetPayload<{
-  include: {
-    author: true;
-    comments: {
-      include: {
-        author: true;
-      };
-    };
-    likes: true;
-  };
-}>;
-
-export type CommentWithAuthor = Prisma.CommentGetPayload<{
-  include: {
-    author: true;
-  };
-}>;
-
-export type Like = {
-  id: string;
-  userId: string;
-  postId: string;
-  createdAt: Date;
+export type Profile = Database['public']['Tables']['profiles']['Row'];
+export type Post = Database['public']['Tables']['posts']['Row'] & {
+  profiles: Profile;
+  likes: Like[];
+  comments: Comment[];
 };
-
-export type MarketplaceListingWithSeller = Prisma.MarketplaceListingGetPayload<{
-  include: {
-    seller: true;
-  };
-}>;
-
-export type ExtendedUserProfile = Prisma.UserGetPayload<{
-  include: {
-    posts: {
-      include: {
-        author: true;
-        comments: {
-          include: {
-            author: true;
-          };
-        };
-        likes: true;
-      };
-    };
-    followers: true;
-    following: true;
-    listings: {
-      include: {
-        seller: true;
-      };
-    };
-  };
-}>;
-
-export type MessageWithSender = Prisma.MessageGetPayload<{
-  include: {
-    sender: true;
-  };
-}>;
-
-export type ConversationWithUsers = Prisma.ConversationGetPayload<{
-  include: {
-    user1: true;
-    user2: true;
-    messages: {
-      include: {
-        sender: true;
-      };
-    };
-  };
-}>;
-
-export type NotificationType = 'like' | 'comment' | 'follow' | 'mention' | 'share';
-
-export type Notification = Prisma.NotificationGetPayload<{
-  include: {
-    user: true;
-  };
-}>;
-
-export type PostWithAuthorAndCounts = Prisma.PostGetPayload<{
-  include: {
-    author: true;
-    comments: {
-      include: {
-        author: true;
-      };
-    };
-    _count: {
-      select: {
-        comments: true;
-        likes: true;
-      };
-    };
-    likes: {
-      select: {
-        userId: true;
-      };
-    };
-  };
-}>;
-
-export type PostResponse = Omit<PostWithAuthorAndCounts, 'likes'> & {
-  isLiked: boolean;
+export type Comment = Database['public']['Tables']['comments']['Row'] & {
+  profiles: Profile;
+};
+export type Like = Database['public']['Tables']['likes']['Row'];
+export type Conversation = Database['public']['Tables']['conversations']['Row'] & {
+  profiles: Profile;
+  messages: Message[];
+};
+export type Message = Database['public']['Tables']['messages']['Row'] & {
+  profiles: Profile;
+};
+export type MarketplaceItem = Database['public']['Tables']['marketplace_items']['Row'] & {
+  profiles: Profile;
+};
+export type Notification = Database['public']['Tables']['notifications']['Row'] & {
+  profiles: Profile;
 };

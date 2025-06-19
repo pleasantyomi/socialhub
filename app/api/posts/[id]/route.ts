@@ -1,7 +1,12 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from "@/app/api/auth/[...nextauth]";
-import prisma from '@/lib/prisma';
+import { validateUser } from '@/lib/api-utils';
+import { getPost, updatePost, deletePost } from '@/lib/supabase';
+import { z } from 'zod';
+
+const updatePostSchema = z.object({
+  content: z.string().min(1).max(500).optional(),
+  image: z.string().url().optional(),
+});
 
 // GET a single post
 export async function GET(
@@ -9,64 +14,59 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const post = await prisma.post.findUnique({
-      where: { id: params.id },
-      include: {
-        author: true,
-        comments: {
-          include: {
-            author: true,
-          },
-        },
-        likes: true,
-      },
-    });
-
+    const post = await getPost(params.id);
+    
     if (!post) {
       return NextResponse.json({ error: 'Post not found' }, { status: 404 });
     }
 
     return NextResponse.json(post);
   } catch (error) {
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to fetch post' },
+      { status: 500 }
+    );
   }
 }
 
 // UPDATE a post
-export async function PUT(
+export async function PATCH(
   request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const json = await request.json();
-    const post = await prisma.post.findUnique({
-      where: { id: params.id },
-    });
+    const session = await validateUser();
+    const post = await getPost(params.id);
 
     if (!post) {
       return NextResponse.json({ error: 'Post not found' }, { status: 404 });
     }
 
-    if (post.authorId !== session.user.id) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    if (post.author_id !== session.user.id) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 403 }
+      );
     }
 
-    const updatedPost = await prisma.post.update({
-      where: { id: params.id },
-      data: {
-        content: json.content,
-        image: json.image,
-      },
-    });
+    const json = await request.json();
+    const validatedData = updatePostSchema.parse(json);
+    
+    const updatedPost = await updatePost(params.id, validatedData);
 
     return NextResponse.json(updatedPost);
   } catch (error) {
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: 'Invalid data', details: error.errors },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json(
+      { error: 'Failed to update post' },
+      { status: 500 }
+    );
   }
 }
 
@@ -76,29 +76,30 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const post = await prisma.post.findUnique({
-      where: { id: params.id },
-    });
+    const session = await validateUser();
+    const post = await getPost(params.id);
 
     if (!post) {
       return NextResponse.json({ error: 'Post not found' }, { status: 404 });
     }
 
-    if (post.authorId !== session.user.id) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    if (post.author_id !== session.user.id) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 403 }
+      );
     }
 
-    await prisma.post.delete({
-      where: { id: params.id },
-    });
+    await deletePost(params.id);
 
-    return NextResponse.json({ message: 'Post deleted successfully' });
+    return NextResponse.json(
+      { message: 'Post deleted successfully' },
+      { status: 200 }
+    );
   } catch (error) {
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to delete post' },
+      { status: 500 }
+    );
   }
 }

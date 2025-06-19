@@ -1,13 +1,9 @@
-import type { Metadata } from "next";
+"use client";
+
 import MainLayout from "@/components/layout/main-layout";
 import PostFeed from "@/components/post/post-feed";
 import SidebarLeft from "@/components/layout/sidebar-left";
 import SidebarRight from "@/components/layout/sidebar-right";
-
-export const metadata: Metadata = {
-  title: "Feed | unify",
-  description: "Your social media feed",
-};
 
 export default function FeedPage() {
   return (

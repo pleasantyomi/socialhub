@@ -1,499 +1,187 @@
+import { supabase } from "./supabase";
 import type {
   Post,
   Comment,
   MarketplaceItem,
-  User,
-  TrendingTopic,
-  UserProfile,
+  Profile,
+  Like,
   Conversation,
-  Notification,
+  Message,
+  Notification
 } from "./types";
+import * as api from "./api";
 
-// Mock data for the application
-// In a real app, this would come from an API or database
+export type TrendingTopic = {
+  id: string;
+  name: string;
+  posts_count: number;
+  category: string;
+};
 
-export function getPosts(): Post[] {
-  return [
-    {
-      id: "1",
-      author: {
-        name: "John Doe",
-        avatar: "/placeholder.svg?height=40&width=40",
-      },
-      content:
-        "Just launched my new website! Check it out and let me know what you think. #webdev #design",
-      image: "/placeholder.svg?height=400&width=600",
-      timestamp: "2 hours ago",
-      likes: 24,
-      comments: [
-        {
-          id: "c1",
-          author: {
-            name: "Alice Smith",
-            avatar: "/placeholder.svg?height=40&width=40",
-          },
-          content: "Looks amazing! Great work!",
-          timestamp: "1 hour ago",
-          likes: 5,
-        },
-        {
-          id: "c2",
-          author: {
-            name: "Bob Johnson",
-            avatar: "/placeholder.svg?height=40&width=40",
-          },
-          content: "The design is so clean and modern. Love it!",
-          timestamp: "45 minutes ago",
-          likes: 3,
-        },
-      ],
-    },
-    {
-      id: "2",
-      author: {
-        name: "Jane Smith",
-        avatar: "/placeholder.svg?height=40&width=40",
-      },
-      content: "Beautiful sunset at the beach today! 🌅 #nature #sunset #beach",
-      image: "/placeholder.svg?height=400&width=600",
-      timestamp: "5 hours ago",
-      likes: 56,
-      comments: [
-        {
-          id: "c3",
-          author: {
-            name: "Mike Wilson",
-            avatar: "/placeholder.svg?height=40&width=40",
-          },
-          content: "Wow, that's gorgeous! Which beach is this?",
-          timestamp: "4 hours ago",
-          likes: 2,
-        },
-      ],
-    },
-    {
-      id: "3",
-      author: {
-        name: "Alex Johnson",
-        avatar: "/placeholder.svg?height=40&width=40",
-      },
-      content:
-        "Just finished reading this amazing book. Highly recommend it to everyone who loves science fiction!",
-      timestamp: "1 day ago",
-      likes: 18,
-      comments: [],
-    },
-  ];
+export type SuggestedUser = Profile & {
+  follower_count: number;
+  is_following: boolean;
+};
+
+// Posts
+export async function getPosts(): Promise<Post[]> {
+  return api.fetchPosts();
 }
 
-export function getComments(postId: string): Comment[] {
-  const post = getPosts().find((p) => p.id === postId);
-  return post?.comments || [];
+export async function getPost(id: string): Promise<Post> {
+  const { data, error } = await supabase
+    .from("posts")
+    .select(`
+      *,
+      profiles:profile_id(*),
+      likes(*),
+      comments(*)
+    `)
+    .eq("id", id)
+    .single();
+
+  if (error) throw error;
+  return data as Post;
 }
 
-export function getTrendingTopics(): TrendingTopic[] {
-  return [
-    {
-      category: "Technology",
-      title: "#WebDevelopment",
-      posts: 1234,
-    },
-    {
-      category: "Entertainment",
-      title: "New Movie Release",
-      posts: 982,
-    },
-    {
-      category: "Sports",
-      title: "#Olympics2024",
-      posts: 2345,
-    },
-    {
-      category: "Business",
-      title: "Stock Market Update",
-      posts: 567,
-    },
-  ];
+export async function createPost(userId: string, content: string, image?: string): Promise<Post> {
+  return api.createPost(content, image);
 }
 
-export function getSuggestedUsers(): User[] {
-  return [
-    {
-      id: "u1",
-      name: "Sarah Parker",
-      username: "sarahp",
-      avatar: "/placeholder.svg?height=40&width=40",
-    },
-    {
-      id: "u2",
-      name: "David Wilson",
-      username: "davidw",
-      avatar: "/placeholder.svg?height=40&width=40",
-    },
-    {
-      id: "u3",
-      name: "Emily Chen",
-      username: "emilyc",
-      avatar: "/placeholder.svg?height=40&width=40",
-    },
-  ];
+export async function likePost(postId: string, userId: string): Promise<Like> {
+  return api.likePost(postId);
 }
 
-export function getMarketplaceItems(): MarketplaceItem[] {
-  return [
-    {
-      id: "m1",
-      title: "iPhone 13 Pro - Excellent Condition",
-      price: 699.99,
-      image: "/placeholder.svg?height=300&width=300",
-      location: "New York",
-      listedTime: "2 days ago",
-      category: "Electronics",
-    },
-    {
-      id: "m2",
-      title: "Vintage Leather Sofa",
-      price: 450,
-      image: "/placeholder.svg?height=300&width=300",
-      location: "Los Angeles",
-      listedTime: "1 week ago",
-      category: "Furniture",
-    },
-    {
-      id: "m3",
-      title: "Mountain Bike - Trek",
-      price: 350,
-      image: "/placeholder.svg?height=300&width=300",
-      location: "Chicago",
-      listedTime: "3 days ago",
-      category: "Sports",
-    },
-    {
-      id: "m4",
-      title: "Canon EOS R5 Camera",
-      price: 2100,
-      image: "/placeholder.svg?height=300&width=300",
-      location: "Miami",
-      listedTime: "Just now",
-      category: "Electronics",
-    },
-    {
-      id: "m5",
-      title: "Designer Handbag",
-      price: 180,
-      image: "/placeholder.svg?height=300&width=300",
-      location: "Seattle",
-      listedTime: "5 days ago",
-      category: "Fashion",
-    },
-    {
-      id: "m6",
-      title: "Gaming PC - High Spec",
-      price: 1200,
-      image: "/placeholder.svg?height=300&width=300",
-      location: "Austin",
-      listedTime: "1 day ago",
-      category: "Electronics",
-    },
-  ];
+export async function unlikePost(postId: string, userId: string): Promise<void> {
+  return api.unlikePost(postId);
 }
 
-export function getUserProfile(): UserProfile {
-  return {
-    name: "Alex Morgan",
-    username: "alexmorgan",
-    avatar: "/placeholder.svg?height=100&width=100",
-    coverImage: "/placeholder.svg?height=400&width=1200",
-    bio: "Digital creator | Web Developer | Photography enthusiast | Exploring the world one pixel at a time",
-    location: "San Francisco, CA",
-    website: "https://alexmorgan.com",
-    joinDate: "March 2020",
-    following: 245,
-    followers: 1024,
-  };
+// Comments
+export async function createComment(postId: string, userId: string, content: string): Promise<Comment> {
+  return api.createComment(postId, content);
 }
 
-export function getUserPosts(): Post[] {
-  return [
-    {
-      id: "up1",
-      author: {
-        name: "Alex Morgan",
-        avatar: "/placeholder.svg?height=40&width=40",
-      },
-      content:
-        "Just launched my new portfolio website! Check it out and let me know what you think.",
-      image: "/placeholder.svg?height=400&width=600",
-      timestamp: "2 days ago",
-      likes: 45,
-      comments: [],
-    },
-    {
-      id: "up2",
-      author: {
-        name: "Alex Morgan",
-        avatar: "/placeholder.svg?height=40&width=40",
-      },
-      content:
-        "Working on a new exciting project. Can't wait to share it with everyone!",
-      timestamp: "1 week ago",
-      likes: 32,
-      comments: [],
-    },
-    {
-      id: "up3",
-      author: {
-        name: "Alex Morgan",
-        avatar: "/placeholder.svg?height=40&width=40",
-      },
-      content: "Beautiful sunset from my balcony today. #nofilter",
-      image: "/placeholder.svg?height=400&width=600",
-      timestamp: "2 weeks ago",
-      likes: 78,
-      comments: [],
-    },
-  ];
+// Marketplace
+export async function getMarketplaceItems(filters?: any): Promise<MarketplaceItem[]> {
+  return api.fetchMarketplaceItems(filters);
 }
 
-export function getUserLikedPosts(): Post[] {
-  return [
-    {
-      id: "lp1",
-      author: {
-        name: "Jane Smith",
-        avatar: "/placeholder.svg?height=40&width=40",
-      },
-      content:
-        "Just got back from an amazing trip to Japan! Here are some highlights.",
-      image: "/placeholder.svg?height=400&width=600",
-      timestamp: "3 days ago",
-      likes: 89,
-      comments: [],
-    },
-    {
-      id: "lp2",
-      author: {
-        name: "Mark Wilson",
-        avatar: "/placeholder.svg?height=40&width=40",
-      },
-      content:
-        "Check out this cool tech gadget I just got. It's a game changer!",
-      image: "/placeholder.svg?height=400&width=600",
-      timestamp: "5 days ago",
-      likes: 56,
-      comments: [],
-    },
-  ];
+export async function createMarketplaceItem(item: any): Promise<MarketplaceItem> {
+  return api.createMarketplaceItem(item);
 }
 
-// New functions for messages and notifications
-
-export function getConversations(): Conversation[] {
-  return [
-    {
-      id: "c1",
-      user: {
-        name: "Sarah Parker",
-        avatar: "/placeholder.svg?height=40&width=40",
-        isOnline: true,
-        lastSeen: "",
-      },
-      lastMessage: "That sounds great! Let's meet up tomorrow.",
-      lastMessageTime: "10:42 AM",
-      unread: true,
-      messages: [
-        {
-          content: "Hey, how are you doing?",
-          time: "10:30 AM",
-          isMe: false,
-        },
-        {
-          content: "I'm good, thanks! Just working on some new designs.",
-          time: "10:32 AM",
-          isMe: true,
-        },
-        {
-          content:
-            "They look amazing! Would love to catch up and hear more about your projects.",
-          time: "10:35 AM",
-          isMe: false,
-        },
-        {
-          content:
-            "Sure, I'm free tomorrow afternoon if you want to grab coffee?",
-          time: "10:40 AM",
-          isMe: true,
-        },
-        {
-          content: "That sounds great! Let's meet up tomorrow.",
-          time: "10:42 AM",
-          isMe: false,
-        },
-      ],
-    },
-    {
-      id: "c2",
-      user: {
-        name: "David Wilson",
-        avatar: "/placeholder.svg?height=40&width=40",
-        isOnline: false,
-        lastSeen: "2 hours ago",
-      },
-      lastMessage: "Did you see the latest update to the project?",
-      lastMessageTime: "Yesterday",
-      unread: false,
-      messages: [
-        {
-          content: "Hey, did you get a chance to review the documents I sent?",
-          time: "Yesterday, 4:30 PM",
-          isMe: false,
-        },
-        {
-          content: "Yes, I went through them. Everything looks good!",
-          time: "Yesterday, 5:15 PM",
-          isMe: true,
-        },
-        {
-          content: "Great! I'll proceed with the next steps then.",
-          time: "Yesterday, 5:20 PM",
-          isMe: false,
-        },
-        {
-          content: "Did you see the latest update to the project?",
-          time: "Yesterday, 6:45 PM",
-          isMe: false,
-        },
-      ],
-    },
-    {
-      id: "c3",
-      user: {
-        name: "Emily Chen",
-        avatar: "/placeholder.svg?height=40&width=40",
-        isOnline: true,
-        lastSeen: "",
-      },
-      lastMessage: "The presentation went really well!",
-      lastMessageTime: "2 days ago",
-      unread: false,
-      messages: [
-        {
-          content: "How did your presentation go?",
-          time: "2 days ago, 2:30 PM",
-          isMe: true,
-        },
-        {
-          content: "The presentation went really well!",
-          time: "2 days ago, 3:45 PM",
-          isMe: false,
-        },
-      ],
-    },
-    {
-      id: "c4",
-      user: {
-        name: "Michael Brown",
-        avatar: "/placeholder.svg?height=40&width=40",
-        isOnline: false,
-        lastSeen: "3 days ago",
-      },
-      lastMessage: "Are we still on for the team lunch next week?",
-      lastMessageTime: "3 days ago",
-      unread: false,
-      messages: [
-        {
-          content: "Hey team, just checking in about next week's schedule.",
-          time: "3 days ago, 10:15 AM",
-          isMe: false,
-        },
-        {
-          content: "I should be available most days except Wednesday.",
-          time: "3 days ago, 10:30 AM",
-          isMe: true,
-        },
-        {
-          content: "Are we still on for the team lunch next week?",
-          time: "3 days ago, 11:45 AM",
-          isMe: false,
-        },
-      ],
-    },
-  ];
+// Messages
+export async function getConversations(userId: string): Promise<Conversation[]> {
+  return api.fetchConversations();
 }
 
-export function getCurrentConversation(): Conversation | undefined {
-  return getConversations()[0];
+export async function getMessages(conversationId: string): Promise<Message[]> {
+  return api.fetchMessages(conversationId);
 }
 
-export function getNotifications(): Notification[] {
-  return [
-    {
-      id: "n1",
-      user: {
-        name: "Sarah Parker",
-        avatar: "/placeholder.svg?height=40&width=40",
+export async function sendMessage(conversationId: string, userId: string, content: string): Promise<Message> {
+  return api.sendMessage(conversationId, content);
+}
+
+// Notifications
+export async function getNotifications(userId: string): Promise<Notification[]> {
+  return api.fetchNotifications();
+}
+
+export async function markNotificationAsRead(notificationId: string): Promise<void> {
+  return api.markNotificationAsRead(notificationId);
+}
+
+// Profile
+export async function getProfile(userId: string): Promise<Profile> {
+  return api.fetchProfile(userId);
+}
+
+export async function updateProfile(userId: string, profile: Partial<Profile>): Promise<Profile> {
+  return api.updateProfile(profile);
+}
+
+// Trending and Suggestions
+export async function getTrendingTopics(): Promise<TrendingTopic[]> {
+  try {
+    const { data, error } = await supabase
+      .rpc('get_trending_topics')
+      .limit(5);
+    
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching trending topics:', error);
+    // Return demo data as fallback
+    return [
+      { id: '1', name: '#university', posts_count: 125, category: 'Education' },
+      { id: '2', name: '#research', posts_count: 98, category: 'Academic' },
+      { id: '3', name: '#campus', posts_count: 87, category: 'General' },
+      { id: '4', name: '#events', posts_count: 76, category: 'Social' },
+      { id: '5', name: '#study', posts_count: 65, category: 'Education' },
+    ];
+  }
+}
+
+export async function getSuggestedUsers(userId?: string): Promise<SuggestedUser[]> {
+  try {
+    if (!userId) throw new Error('No user ID provided');
+
+    const { data, error } = await supabase
+      .rpc('get_suggested_users', { current_user_id: userId })
+      .limit(5);
+    
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching suggested users:', error);
+    // Return demo data as fallback
+    return [
+      {
+        id: 'demo1',
+        username: 'academic_pro',
+        full_name: 'Academic Professional',
+        avatar_url: '/placeholder.svg',
+        website: null,
+        bio: 'Professor of Computer Science',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        follower_count: 1200,
+        is_following: false,
       },
-      type: "like",
-      action: "liked your post",
-      target: "",
-      content:
-        "Just launched my new portfolio website! Check it out and let me know what you think.",
-      time: "10 minutes ago",
-      read: false,
-    },
-    {
-      id: "n2",
-      user: {
-        name: "David Wilson",
-        avatar: "/placeholder.svg?height=40&width=40",
+      {
+        id: 'demo2',
+        username: 'student_leader',
+        full_name: 'Student Leader',
+        avatar_url: '/placeholder.svg',
+        website: null,
+        bio: 'Student Body President',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        follower_count: 850,
+        is_following: false,
       },
-      type: "comment",
-      action: "commented on your post",
-      target: "",
-      content:
-        "This looks amazing! I'd love to hear more about how you built it.",
-      time: "1 hour ago",
-      read: false,
-    },
-    {
-      id: "n3",
-      user: {
-        name: "Emily Chen",
-        avatar: "/placeholder.svg?height=40&width=40",
-      },
-      type: "follow",
-      action: "started following you",
-      target: "",
-      content: "",
-      time: "3 hours ago",
-      read: true,
-    },
-    {
-      id: "n4",
-      user: {
-        name: "Michael Brown",
-        avatar: "/placeholder.svg?height=40&width=40",
-      },
-      type: "mention",
-      action: "mentioned you in a comment",
-      target: "",
-      content:
-        "I think @alexmorgan would have some great insights on this topic!",
-      time: "Yesterday",
-      read: true,
-    },
-    {
-      id: "n5",
-      user: {
-        name: "Jessica Lee",
-        avatar: "/placeholder.svg?height=40&width=40",
-      },
-      type: "share",
-      action: "shared your post",
-      target: "",
-      content: "Beautiful sunset from my balcony today. #nofilter",
-      time: "2 days ago",
-      read: true,
-    },
-  ];
+      {
+        id: 'demo3',
+        username: 'campus_news',
+        full_name: 'Campus News',
+        avatar_url: '/placeholder.svg',
+        website: 'https://campus.news',
+        bio: 'Your source for campus updates',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        follower_count: 3200,
+        is_following: false,
+      }
+    ];
+  }
+}
+
+// Follow
+export async function followUser(currentUserId: string, targetUserId: string): Promise<void> {
+  return api.followUser(targetUserId);
+}
+
+export async function unfollowUser(currentUserId: string, targetUserId: string): Promise<void> {
+  return api.unfollowUser(targetUserId);
 }
