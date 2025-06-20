@@ -312,3 +312,46 @@ export const getMarketplaceItems = async ({
   if (error) throw error;
   return items;
 };
+
+// Comments functions
+export const getComments = async (postId: string) => {
+  const { data: comments, error } = await supabase
+    .from('comments')
+    .select(`
+      *,
+      profiles:author_id (
+        id,
+        username,
+        avatar_url,
+        full_name
+      )
+    `)
+    .eq('post_id', postId)
+    .order('created_at', { ascending: true });
+
+  if (error) throw error;
+  return comments;
+};
+
+export const createComment = async (commentData: {
+  post_id: string;
+  author_id: string;
+  content: string;
+}) => {
+  const { data: comment, error } = await supabase
+    .from('comments')
+    .insert(commentData)
+    .select(`
+      *,
+      profiles:author_id (
+        id,
+        username,
+        avatar_url,
+        full_name
+      )
+    `)
+    .single();
+
+  if (error) throw error;
+  return comment;
+};

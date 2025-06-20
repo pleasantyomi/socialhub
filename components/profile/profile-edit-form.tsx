@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -10,20 +10,48 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getUserProfile } from "@/lib/data";
+import { getProfile, updateProfile } from "@/lib/data";
+import { useSession } from "next-auth/react";
+import { Profile } from "@/lib/types";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function ProfileEditForm() {
   const router = useRouter();
-  const profile = getUserProfile();
+  const { data: session } = useSession();
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const [formData, setFormData] = useState({
-    name: profile.name,
-    username: profile.username,
-    bio: profile.bio,
-    location: profile.location,
-    website: profile.website || "",
+    full_name: "",
+    username: "",
+    bio: "",
+    website: "",
   });
+  useEffect(() => {
+    loadProfile();
+  }, [session?.user?.id]);
+
+  async function loadProfile() {
+    if (!session?.user?.id) return;
+    
+    try {
+      const fetchedProfile = await getProfile(session.user.id);
+      setProfile(fetchedProfile);
+      setFormData({
+        full_name: fetchedProfile.full_name || "",
+        username: fetchedProfile.username || "",
+        bio: fetchedProfile.bio || "",
+        website: fetchedProfile.website || "",
+      });
+    } catch (error) {
+      console.error('Failed to load profile:', error);
+      toast.error("Failed to load profile.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -32,29 +60,56 @@ export default function ProfileEditForm() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!session?.user?.id) return;
+    
     setIsLoading(true);
-
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      await updateProfile(session.user.id, formData);
+      toast.success("Profile updated successfully!");
       router.push("/profile");
-    }, 1500);
-  };
+    } catch (error) {
+      console.error('Failed to update profile:', error);
+      toast.error("Failed to update profile. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="flex justify-center p-8">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <Card>
+        <CardContent className="p-8 text-center">
+          <p>Profile not found</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit}>
       <Card>
-        <CardContent className="space-y-6 p-6">
-          <div className="flex flex-col items-center space-y-4">
+        <CardContent className="space-y-6 p-6">          <div className="flex flex-col items-center space-y-4">
             <Avatar className="h-24 w-24">
               <AvatarImage
-                src={profile.avatar || "/placeholder.svg"}
-                alt={profile.name}
+                src={profile.avatar_url || "/placeholder.svg"}
+                alt={profile.full_name || profile.username}
                 className="w-full h-full object-cover object-center"
               />
-              <AvatarFallback>{profile.name[0]}</AvatarFallback>
+              <AvatarFallback>
+                {profile.full_name?.[0] || profile.username[0]}
+              </AvatarFallback>
             </Avatar>
             <Button variant="outline" size="sm">
               Change Profile Picture
@@ -62,11 +117,11 @@ export default function ProfileEditForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
+            <Label htmlFor="full_name">Name</Label>
             <Input
-              id="name"
-              name="name"
-              value={formData.name}
+              id="full_name"
+              name="full_name"
+              value={formData.full_name}
               onChange={handleChange}
               required
             />
@@ -91,16 +146,6 @@ export default function ProfileEditForm() {
               value={formData.bio}
               onChange={handleChange}
               className="min-h-[100px]"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="location">Location</Label>
-            <Input
-              id="location"
-              name="location"
-              value={formData.location}
-              onChange={handleChange}
             />
           </div>
 

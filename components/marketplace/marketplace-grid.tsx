@@ -44,14 +44,13 @@ type MarketplaceGridProps = {
 export default function MarketplaceGrid({ filters }: MarketplaceGridProps) {
 	const [items, setItems] = useState<MarketplaceItem[]>(demoItems);
 	const [loading, setLoading] = useState(true);
-
 	useEffect(() => {
 		loadItems();
-	}, []);
+	}, [filters]);
 
 	async function loadItems() {
 		try {
-			const fetchedItems = await getMarketplaceItems();
+			const fetchedItems = await getMarketplaceItems(filters);
 			setItems(fetchedItems);
 		} catch (error) {
 			console.error("Failed to load marketplace items:", error);

@@ -91,6 +91,11 @@ export async function fetchComments(postId: string) {
   return api(`/comments?postId=${postId}`);
 }
 
+// Single Post API
+export async function fetchPost(postId: string) {
+  return api(`/posts/${postId}`);
+}
+
 // Profile API
 export async function fetchProfile(userId: string) {
   return api(`/profile/${userId}`);

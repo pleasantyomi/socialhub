@@ -1,53 +1,47 @@
-import { notFound } from "next/navigation";
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import MainLayout from "@/components/layout/main-layout";
 import PostDetail from "@/components/post/post-detail";
-import CommentSection from "@/components/comment/comment-section";
-import { getPosts } from "@/lib/data";
-import { type Metadata } from "next";
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import { createApiResponse, validateUser } from "@/lib/api-utils";
-import { Server } from "socket.io";
-import { GoogleProvider } from "next-auth/providers";
-import { NextAuthOptions } from "next-auth";
-import prisma from "@/lib/prisma";
+import { Loader2 } from "lucide-react";
 
 interface PostPageProps {
   params: Promise<{ id: string }>;
 }
 
-export const metadata: Metadata = {
-  title: "Post | unify",
-  description: "View post and comments",
-};
+export default function PostPage({ params }: PostPageProps) {
+  const router = useRouter();
+  const [postId, setPostId] = useState<string>("");
+  const [loading, setLoading] = useState(true);
 
-export default async function PostPage({ params }: PostPageProps) {
-  const { id } = await params;
+  useEffect(() => {
+    async function getParams() {
+      const resolvedParams = await params;
+      setPostId(resolvedParams.id);
+      setLoading(false);
+    }
+    getParams();
+  }, [params]);
 
-  const post = await prisma.post.findUnique({
-    where: { id },
-    include: {
-      author: true,
-      comments: {
-        include: {
-          author: true,
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-      },
-      likes: true,
-    },
-  });
-
-  if (!post) {
-    notFound();
+  if (loading) {
+    return (
+      <MainLayout>
+        <div className="max-w-3xl mx-auto px-4 py-6 flex justify-center">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      </MainLayout>
+    );
   }
 
   return (
     <MainLayout>
       <div className="max-w-3xl mx-auto px-4 py-6">
-        <PostDetail post={post} />
-        <CommentSection postId={id} comments={post.comments} />
+        <PostDetail postId={postId} />
+      </div>
+    </MainLayout>
+  );
+}
       </div>
     </MainLayout>
   );

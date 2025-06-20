@@ -1,21 +1,45 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Edit, MoreHorizontal } from "lucide-react";
+import { Search, Edit, MoreHorizontal, Loader2 } from "lucide-react";
 import { getConversations } from "@/lib/data";
+import { useSession } from "next-auth/react";
+import { Conversation } from "@/lib/types";
+import { toast } from "sonner";
 
 export default function MessageSidebar() {
+  const { data: session } = useSession();
   const [searchQuery, setSearchQuery] = useState("");
-  const conversations = getConversations();
-  const [activeConversation, setActiveConversation] = useState(
-    conversations[0]?.id || ""
-  );
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeConversation, setActiveConversation] = useState("");
+  useEffect(() => {
+    loadConversations();
+  }, [session?.user?.id]);
+
+  async function loadConversations() {
+    if (!session?.user?.id) return;
+    
+    try {
+      const fetchedConversations = await getConversations(session.user.id);
+      setConversations(fetchedConversations);
+      if (fetchedConversations.length > 0) {
+        setActiveConversation(fetchedConversations[0].id);
+      }
+    } catch (error) {
+      console.error('Failed to load conversations:', error);
+      toast.error("Failed to load conversations.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const filteredConversations = conversations.filter((conversation) =>
-    conversation.user.name.toLowerCase().includes(searchQuery.toLowerCase())
+    conversation.profiles?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    conversation.profiles?.username?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -40,46 +64,50 @@ export default function MessageSidebar() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-        </div>
-      </div>
+        </div>      </div>
 
       <div className="flex-1 overflow-auto">
-        {filteredConversations.map((conversation) => (
-          <button
-            key={conversation.id}
-            className={`w-full text-left p-4 border-b hover:bg-muted/50 transition-colors ${
-              activeConversation === conversation.id ? "bg-muted/50" : ""
-            }`}
-            onClick={() => setActiveConversation(conversation.id)}
-          >
-            <div className="flex items-start gap-3">
-              <Avatar>
-                <AvatarImage
-                  src={conversation.user.avatar || "/placeholder-user.svg"}
-                  alt={conversation.user.name}
-                  className="w-full h-full object-center object-cover"
-                />
-                <AvatarFallback>{conversation.user.name[0]}</AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-baseline justify-between gap-2">
-                  <p className="font-medium truncate">
-                    {conversation.user.name}
-                  </p>
-                  <p className="text-xs text-muted-foreground whitespace-nowrap">
-                    {conversation.lastMessageTime}
+        {loading ? (
+          <div className="flex justify-center p-8">
+            <Loader2 className="h-8 w-8 animate-spin" />
+          </div>
+        ) : (
+          filteredConversations.map((conversation) => (
+            <button
+              key={conversation.id}
+              className={`w-full text-left p-4 border-b hover:bg-muted/50 transition-colors ${
+                activeConversation === conversation.id ? "bg-muted/50" : ""
+              }`}
+              onClick={() => setActiveConversation(conversation.id)}
+            >
+              <div className="flex items-start gap-3">
+                <Avatar>
+                  <AvatarImage
+                    src={conversation.profiles?.avatar_url || "/placeholder-user.svg"}
+                    alt={conversation.profiles?.full_name || conversation.profiles?.username || "User"}
+                    className="w-full h-full object-center object-cover"
+                  />
+                  <AvatarFallback>
+                    {conversation.profiles?.full_name?.[0] || conversation.profiles?.username?.[0] || "U"}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <p className="font-medium truncate">
+                      {conversation.profiles?.full_name || conversation.profiles?.username || "Unknown User"}
+                    </p>
+                    <p className="text-xs text-muted-foreground whitespace-nowrap">
+                      {new Date(conversation.last_message_at).toLocaleString()}
+                    </p>
+                  </div>
+                  <p className="text-sm text-muted-foreground truncate">
+                    {conversation.messages?.[0]?.content || "No messages yet"}
                   </p>
                 </div>
-                <p className="text-sm text-muted-foreground truncate">
-                  {conversation.lastMessage}
-                </p>
               </div>
-              {conversation.unread && (
-                <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0 mt-2"></div>
-              )}
-            </div>
-          </button>
-        ))}
+            </button>
+          ))
+        )}
       </div>
     </div>
   );
