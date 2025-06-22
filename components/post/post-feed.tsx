@@ -29,10 +29,11 @@ import { toast } from "sonner";
 const demoData: Post[] = [
   {
     id: "1",
+    author_id: "demo",
     content: "This is a demo post! The real posts will load from the database.",
+    image: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-    // profile_id: "demo",
     profiles: {
       id: "demo",
       username: "demo_user",
@@ -64,7 +65,7 @@ export default function PostFeed() {
       const fetchedPosts = await getPosts();
       setPosts(Array.isArray(fetchedPosts) ? fetchedPosts : demoData);
     } catch (error) {
-      console.error('Failed to load posts:', error);
+      console.error('Faigggled to load posts:', error);
       toast.error("Failed to load posts. Using demo data instead.");
       setPosts(demoData);
     } finally {
