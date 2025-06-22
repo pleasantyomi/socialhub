@@ -32,7 +32,7 @@ const demoData: Post[] = [
     content: "This is a demo post! The real posts will load from the database.",
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-    profile_id: "demo",
+    // profile_id: "demo",
     profiles: {
       id: "demo",
       username: "demo_user",
@@ -62,10 +62,11 @@ export default function PostFeed() {
   async function loadPosts() {
     try {
       const fetchedPosts = await getPosts();
-      setPosts(fetchedPosts);
+      setPosts(Array.isArray(fetchedPosts) ? fetchedPosts : demoData);
     } catch (error) {
       console.error('Failed to load posts:', error);
       toast.error("Failed to load posts. Using demo data instead.");
+      setPosts(demoData);
     } finally {
       setLoading(false);
     }
@@ -130,6 +131,8 @@ export default function PostFeed() {
     }
   }
 
+  const safePosts = Array.isArray(posts) ? posts : [];
+
   return (
     <div className="space-y-6 pt-6">
       <Card>
@@ -169,69 +172,71 @@ export default function PostFeed() {
           <Loader2 className="h-8 w-8 animate-spin" />
         </div>
       ) : (
-        posts.map((post) => (
-          <Card key={post.id}>
-            <CardHeader className="flex flex-row items-center gap-4 p-4">
-              <Avatar>
-                <AvatarImage
-                  src={post.profiles.avatar_url || "/placeholder.svg"}
-                  alt={post.profiles.full_name || post.profiles.username}
-                  className="h-full w-full object-cover object-center"
-                />
-                <AvatarFallback>
-                  {post.profiles.full_name?.[0] || post.profiles.username[0]}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Link href={`/profile/${post.profiles.id}`} className="font-semibold hover:underline">
-                      {post.profiles.full_name || post.profiles.username}
-                    </Link>
-                    <p className="text-sm text-gray-500">
-                      {new Date(post.created_at).toLocaleString()}
-                    </p>
+        <div>
+          {safePosts.map((post) => (
+            <Card key={post.id} className="mb-4">
+              <CardHeader className="flex flex-row items-center gap-4 p-4">
+                <Avatar>
+                  <AvatarImage
+                    src={post.profiles.avatar_url || "/placeholder.svg"}
+                    alt={post.profiles.full_name || post.profiles.username}
+                    className="h-full w-full object-cover object-center"
+                  />
+                  <AvatarFallback>
+                    {post.profiles.full_name?.[0] || post.profiles.username[0]}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Link href={`/profile/${post.profiles.id}`} className="font-semibold hover:underline">
+                        {post.profiles.full_name || post.profiles.username}
+                      </Link>
+                      <p className="text-sm text-gray-500">
+                        {new Date(post.created_at).toLocaleString()}
+                      </p>
+                    </div>
+                    <Button variant="ghost" size="icon">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
                   </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-4 pt-0">
+                <p>{post.content}</p>
+              </CardContent>
+              <CardFooter className="flex items-center justify-between p-4">
+                <div className="flex gap-4">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleLike(post.id)}
+                    className={
+                      session?.user?.id && post.likes.some(like => like.profile_id === session.user.id)
+                        ? "text-red-500"
+                        : ""
+                    }
+                  >
+                    <Heart className="h-4 w-4" />
+                    <span className="ml-2">{post.likes.length}</span>
+                  </Button>
+                  <Link href={`/post/${post.id}`}>
+                    <Button variant="ghost" size="icon">
+                      <MessageCircle className="h-4 w-4" />
+                      <span className="ml-2">{post.comments.length}</span>
+                    </Button>
+                  </Link>
                   <Button variant="ghost" size="icon">
-                    <MoreHorizontal className="h-4 w-4" />
+                    <Share2 className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon">
+                    <BookmarkIcon className="h-4 w-4" />
                   </Button>
                 </div>
-              </div>
-            </CardHeader>
-            <CardContent className="p-4 pt-0">
-              <p>{post.content}</p>
-            </CardContent>
-            <CardFooter className="flex items-center justify-between p-4">
-              <div className="flex gap-4">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleLike(post.id)}
-                  className={
-                    session?.user?.id && post.likes.some(like => like.profile_id === session.user.id)
-                      ? "text-red-500"
-                      : ""
-                  }
-                >
-                  <Heart className="h-4 w-4" />
-                  <span className="ml-2">{post.likes.length}</span>
-                </Button>
-                <Link href={`/post/${post.id}`}>
-                  <Button variant="ghost" size="icon">
-                    <MessageCircle className="h-4 w-4" />
-                    <span className="ml-2">{post.comments.length}</span>
-                  </Button>
-                </Link>
-                <Button variant="ghost" size="icon">
-                  <Share2 className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="icon">
-                  <BookmarkIcon className="h-4 w-4" />
-                </Button>
-              </div>
-            </CardFooter>
-          </Card>
-        ))
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
       )}
     </div>
   );

@@ -19,7 +19,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <SessionProvider>
       {children}
-      <Toaster />
+      <Toaster richColors position="top-center" />
     </SessionProvider>
   );
 }

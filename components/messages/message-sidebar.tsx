@@ -15,7 +15,7 @@ export default function MessageSidebar() {
   );
 
   const filteredConversations = conversations.filter((conversation) =>
-    conversation.user.name.toLowerCase().includes(searchQuery.toLowerCase())
+    conversation.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -55,16 +55,16 @@ export default function MessageSidebar() {
             <div className="flex items-start gap-3">
               <Avatar>
                 <AvatarImage
-                  src={conversation.user.avatar || "/placeholder-user.svg"}
-                  alt={conversation.user.name}
+                  src={conversation.avatar || "/placeholder-user.svg"}
+                  alt={conversation.title}
                   className="w-full h-full object-center object-cover"
                 />
-                <AvatarFallback>{conversation.user.name[0]}</AvatarFallback>
+                <AvatarFallback>{conversation.title[0]}</AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
                 <div className="flex items-baseline justify-between gap-2">
                   <p className="font-medium truncate">
-                    {conversation.user.name}
+                    {conversation.title}
                   </p>
                   <p className="text-xs text-muted-foreground whitespace-nowrap">
                     {conversation.lastMessageTime}

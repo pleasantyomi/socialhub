@@ -5,17 +5,16 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { signIn } from "next-auth/react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { AtSign, Lock, User, Github, Mail } from "lucide-react"
-import { useToast } from "@/components/ui/use-toast"
+import { toast } from "sonner"
 
 export default function AuthPage() {
   const router = useRouter()
-  const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -34,21 +33,13 @@ export default function AuthPage() {
       })
 
       if (result?.error) {
-        toast({
-          variant: "destructive",
-          title: "Login failed",
-          description: result.error,
-        })
+        toast.error("Login failed: " + result.error)
       } else {
         router.push("/feed")
         router.refresh()
       }
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Login failed",
-        description: "Something went wrong. Please try again.",
-      })
+      toast.error("Login failed: Something went wrong. Please try again.")
     } finally {
       setIsLoading(false)
     }
@@ -83,21 +74,13 @@ export default function AuthPage() {
       })
 
       if (result?.error) {
-        toast({
-          variant: "destructive",
-          title: "Login failed",
-          description: result.error,
-        })
+        toast.error("Login failed: " + result.error)
       } else {
         router.push("/feed")
         router.refresh()
       }
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Signup failed",
-        description: error instanceof Error ? error.message : "Something went wrong. Please try again.",
-      })
+      toast.error("Signup failed: " + (error instanceof Error ? error.message : "Something went wrong. Please try again."))
     } finally {
       setIsLoading(false)
     }
@@ -108,11 +91,7 @@ export default function AuthPage() {
     try {
       await signIn(provider, { callbackUrl: "/feed" })
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: `${provider} login failed`,
-        description: "Something went wrong. Please try again.",
-      })
+      toast.error(`${provider} login failed: Something went wrong. Please try again.`)
       setIsLoading(false)
     }
   }
