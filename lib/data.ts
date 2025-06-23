@@ -29,19 +29,7 @@ export async function getPosts(): Promise<Post[]> {
 }
 
 export async function getPost(id: string): Promise<Post> {
-  const { data, error } = await supabase
-    .from("posts")
-    .select(`
-      *,
-      profiles:profile_id(*),
-      likes(*),
-      comments(*)
-    `)
-    .eq("id", id)
-    .single();
-
-  if (error) throw error;
-  return data as Post;
+  return api.fetchPost(id);
 }
 
 export async function createPost(userId: string, content: string, image?: string): Promise<Post> {
@@ -59,6 +47,10 @@ export async function unlikePost(postId: string, userId: string): Promise<void> 
 // Comments
 export async function createComment(postId: string, userId: string, content: string): Promise<Comment> {
   return api.createComment(postId, content);
+}
+
+export async function getComments(postId: string): Promise<Comment[]> {
+  return api.fetchComments(postId);
 }
 
 // Marketplace
@@ -99,6 +91,12 @@ export async function getProfile(userId: string): Promise<Profile> {
 
 export async function updateProfile(userId: string, profile: Partial<Profile>): Promise<Profile> {
   return api.updateProfile(profile);
+}
+
+export async function getUserProfile(): Promise<Profile> {
+  // This function returns the current user's profile
+  // You might want to get the current user ID from session or context
+  throw new Error('User ID is required to get profile');
 }
 
 // Trending and Suggestions

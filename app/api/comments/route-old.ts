@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { createApiResponse, validateUser } from '@/lib/api-utils';
+import { createApiResponse, getPaginationParams, validateUser } from '@/lib/api-utils';
 import { createComment as createCommentSupabase, getComments } from '@/lib/supabase';
 
 const commentSchema = z.object({
@@ -44,9 +44,8 @@ export async function POST(request: Request) {
     const validatedData = commentSchema.parse(json);
     
     const comment = await createCommentSupabase({
-      post_id: validatedData.postId,
+      ...validatedData,
       author_id: session.user.id,
-      content: validatedData.content,
     });
 
     return createApiResponse({
@@ -66,5 +65,10 @@ export async function POST(request: Request) {
       error: 'Failed to create comment',
       status: 500,
     });
+  }
+
+    return NextResponse.json(comment);
+  } catch (error) {
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

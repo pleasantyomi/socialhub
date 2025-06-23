@@ -1,21 +1,45 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Edit, MoreHorizontal } from "lucide-react";
+import { Search, Edit, MoreHorizontal, Loader2 } from "lucide-react";
 import { getConversations } from "@/lib/data";
+import { useSession } from "next-auth/react";
+import { Conversation } from "@/lib/types";
+import { toast } from "sonner";
 
 export default function MessageSidebar() {
+  const { data: session } = useSession();
   const [searchQuery, setSearchQuery] = useState("");
-  const conversations = getConversations();
-  const [activeConversation, setActiveConversation] = useState(
-    conversations[0]?.id || ""
-  );
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeConversation, setActiveConversation] = useState("");
+  useEffect(() => {
+    loadConversations();
+  }, [session?.user?.id]);
+
+  async function loadConversations() {
+    if (!session?.user?.id) return;
+    
+    try {
+      const fetchedConversations = await getConversations(session.user.id);
+      setConversations(fetchedConversations);
+      if (fetchedConversations.length > 0) {
+        setActiveConversation(fetchedConversations[0].id);
+      }
+    } catch (error) {
+      console.error('Failed to load conversations:', error);
+      toast.error("Failed to load conversations.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const filteredConversations = conversations.filter((conversation) =>
-    conversation.title.toLowerCase().includes(searchQuery.toLowerCase())
+    conversation.profiles?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    conversation.profiles?.username?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -40,8 +64,7 @@ export default function MessageSidebar() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-        </div>
-      </div>
+        </div>      </div>
 
       <div className="flex-1 overflow-auto">
         {filteredConversations.map((conversation) => (
@@ -55,31 +78,25 @@ export default function MessageSidebar() {
             <div className="flex items-start gap-3">
               <Avatar>
                 <AvatarImage
-                  src={conversation.avatar || "/placeholder-user.svg"}
-                  alt={conversation.title}
+                  src={conversation.user.avatar || "/placeholder-user.svg"}
+                  alt={conversation.user.name}
                   className="w-full h-full object-center object-cover"
                 />
-                <AvatarFallback>{conversation.title[0]}</AvatarFallback>
+                <AvatarFallback>{conversation.user.name[0]}</AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
                 <div className="flex items-baseline justify-between gap-2">
                   <p className="font-medium truncate">
-                    {conversation.title}
+                    {conversation.user.name}
                   </p>
                   <p className="text-xs text-muted-foreground whitespace-nowrap">
                     {conversation.lastMessageTime}
                   </p>
                 </div>
-                <p className="text-sm text-muted-foreground truncate">
-                  {conversation.lastMessage}
-                </p>
               </div>
-              {conversation.unread && (
-                <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0 mt-2"></div>
-              )}
-            </div>
-          </button>
-        ))}
+            </button>
+          ))
+        )}
       </div>
     </div>
   );

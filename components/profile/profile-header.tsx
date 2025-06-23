@@ -1,19 +1,72 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { CalendarDays, MapPin, Pencil } from "lucide-react";
-import { getUserProfile } from "@/lib/data";
+import { CalendarDays, MapPin, Pencil, Loader2 } from "lucide-react";
+import { getProfile } from "@/lib/data";
+import { useSession } from "next-auth/react";
+import { Profile } from "@/lib/types";
+import { toast } from "sonner";
 
-export default function ProfileHeader() {
-  const profile = getUserProfile();
+type ProfileHeaderProps = {
+  userId?: string;
+};
+
+export default function ProfileHeader({ userId }: ProfileHeaderProps) {
+  const { data: session } = useSession();
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState(true);
+  
+  const targetUserId = userId || session?.user?.id;
+  useEffect(() => {
+    loadProfile();
+  }, [targetUserId]);
+
+  async function loadProfile() {
+    if (!targetUserId) return;
+    
+    try {
+      const fetchedProfile = await getProfile(targetUserId);
+      setProfile(fetchedProfile);
+    } catch (error) {
+      console.error('Failed to load profile:', error);
+      toast.error("Failed to load profile.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="flex justify-center p-8">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <Card>
+        <CardContent className="p-8 text-center">
+          <p>Profile not found</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const isOwnProfile = session?.user?.id === profile.id;
 
   return (
     <Card>
       <div className="relative h-48 w-full overflow-hidden">
         <Image
-          src={profile.coverImage || "/placeholder.svg"}
+          src="/placeholder.svg"
           alt="Cover image"
           fill
           className="object-cover"
@@ -25,50 +78,56 @@ export default function ProfileHeader() {
           <div className="flex flex-col sm:flex-row sm:items-end gap-4">
             <Avatar className="h-32 w-32 border-4 border-background">
               <AvatarImage
-                src={profile.avatar || "/placeholder.svg"}
-                alt={profile.name}
+                src={profile.avatar_url || "/placeholder.svg"}
+                alt={profile.full_name || profile.username}
                 className="w-full h-full object-cover object-contain"
               />
-              <AvatarFallback>{profile.name[0]}</AvatarFallback>
+              <AvatarFallback>
+                {profile.full_name?.[0] || profile.username[0]}
+              </AvatarFallback>
             </Avatar>
             <div className="mt-4 sm:mt-0 sm:mb-2">
-              <h1 className="text-2xl font-bold">{profile.name}</h1>
+              <h1 className="text-2xl font-bold">
+                {profile.full_name || profile.username}
+              </h1>
               <p className="text-muted-foreground">@{profile.username}</p>
             </div>
           </div>
-          <div className="mt-4 sm:mt-0">
-            <Link href="/profile/edit">
-              <Button variant="outline" size="sm">
-                <Pencil className="mr-2 h-4 w-4" />
-                Edit Profile
-              </Button>
-            </Link>
-          </div>
+          {isOwnProfile && (
+            <div className="mt-4 sm:mt-0">
+              <Link href="/profile/edit">
+                <Button variant="outline" size="sm">
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Edit Profile
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
 
         <div className="space-y-4">
-          <p>{profile.bio}</p>
+          {profile.bio && <p>{profile.bio}</p>}
 
           <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-            {profile.location && (
+            {profile.website && (
               <div className="flex items-center">
                 <MapPin className="mr-1 h-4 w-4" />
-                {profile.location}
+                {profile.website}
               </div>
             )}
             <div className="flex items-center">
               <CalendarDays className="mr-1 h-4 w-4" />
-              Joined {profile.joinDate}
+              Joined {new Date(profile.created_at).toLocaleDateString()}
             </div>
           </div>
 
           <div className="flex gap-6">
             <div>
-              <span className="font-bold">{profile.following}</span>{" "}
+              <span className="font-bold">0</span>{" "}
               <span className="text-muted-foreground">Following</span>
             </div>
             <div>
-              <span className="font-bold">{profile.followers}</span>{" "}
+              <span className="font-bold">0</span>{" "}
               <span className="text-muted-foreground">Followers</span>
             </div>
           </div>
