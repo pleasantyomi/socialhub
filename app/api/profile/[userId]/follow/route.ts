@@ -7,7 +7,7 @@ export async function GET(
   { params }: { params: { userId: string } }
 ) {
   try {
-    const user = await validateUser(request);
+    const user = await validateUser();
     const { userId } = params;
 
     // Check if the current user is following the target user
@@ -32,10 +32,11 @@ export async function GET(
       data: {
         isFollowing: !!followData,
         followerCount: count
-      }
+      },
+      status: 200
     });
   } catch (error) {
-    return createApiResponse({ error });
+    return createApiResponse({ error: error instanceof Error ? error.message : String(error), status: 500 });
   }
 }
 
@@ -44,7 +45,7 @@ export async function POST(
   { params }: { params: { userId: string } }
 ) {
   try {
-    const user = await validateUser(request);
+    const user = await validateUser();
     const { userId } = params;
 
     if (userId === user.id) {
@@ -62,9 +63,9 @@ export async function POST(
 
     if (error) throw error;
 
-    return createApiResponse({ data });
+    return createApiResponse({ data, status: 200 });
   } catch (error) {
-    return createApiResponse({ error });
+    return createApiResponse({ error: error instanceof Error ? error.message : String(error), status: 500 });
   }
 }
 
@@ -73,7 +74,7 @@ export async function DELETE(
   { params }: { params: { userId: string } }
 ) {
   try {
-    const user = await validateUser(request);
+    const user = await validateUser();
     const { userId } = params;
 
     const { error } = await supabase
@@ -84,8 +85,8 @@ export async function DELETE(
 
     if (error) throw error;
 
-    return createApiResponse({ data: { success: true } });
+    return createApiResponse({ data: { success: true }, status: 200 });
   } catch (error) {
-    return createApiResponse({ error });
+    return createApiResponse({ error: error instanceof Error ? error.message : String(error), status: 500 });
   }
 }

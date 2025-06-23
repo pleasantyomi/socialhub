@@ -64,7 +64,8 @@ export default function MessageSidebar() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-        </div>      </div>
+        </div>
+      </div>
 
       <div className="flex-1 overflow-auto">
         {filteredConversations.map((conversation) => (
@@ -78,25 +79,25 @@ export default function MessageSidebar() {
             <div className="flex items-start gap-3">
               <Avatar>
                 <AvatarImage
-                  src={conversation.user.avatar || "/placeholder-user.svg"}
-                  alt={conversation.user.name}
+                  src={conversation.profiles?.avatar_url || "/placeholder-user.svg"}
+                  alt={conversation.profiles?.full_name || conversation.profiles?.username || "User"}
                   className="w-full h-full object-center object-cover"
                 />
-                <AvatarFallback>{conversation.user.name[0]}</AvatarFallback>
+                <AvatarFallback>{(conversation.profiles?.full_name || conversation.profiles?.username || "U")[0]}</AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
                 <div className="flex items-baseline justify-between gap-2">
                   <p className="font-medium truncate">
-                    {conversation.user.name}
+                    {conversation.profiles?.full_name || conversation.profiles?.username || "Unknown"}
                   </p>
                   <p className="text-xs text-muted-foreground whitespace-nowrap">
-                    {conversation.lastMessageTime}
+                    {conversation.last_message_at}
                   </p>
                 </div>
               </div>
-            </button>
-          ))
-        )}
+            </div>
+          </button>
+        ))}
       </div>
     </div>
   );
