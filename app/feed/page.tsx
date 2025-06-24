@@ -19,6 +19,11 @@ export default function FeedPage() {
           <SidebarRight />
         </div>
       </div>
+
+
+
+
+      
     </MainLayout>
   );
 }
