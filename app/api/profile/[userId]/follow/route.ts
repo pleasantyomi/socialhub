@@ -41,18 +41,17 @@ export async function GET(request: Request) {
   }
 }
 
-export async function POST(
-  request: Request,
-  { params }: { params: { userId: string } }
-) {
+export async function POST(request: Request) {
   try {
+    const url = new URL(request.url);
+    const userId = url.pathname.split('/').filter(Boolean).pop();
+    if (!userId) {
+      return createApiResponse({ error: 'User ID is required', status: 400 });
+    }
     const user = await validateUser();
-    const { userId } = params;
-
     if (userId === user.id) {
       throw new Error('Cannot follow yourself');
     }
-
     const { data, error } = await supabase
       .from('follows')
       .insert({
@@ -61,31 +60,27 @@ export async function POST(
       })
       .select()
       .single();
-
     if (error) throw error;
-
     return createApiResponse({ data, status: 200 });
   } catch (error) {
     return createApiResponse({ error: error instanceof Error ? error.message : String(error), status: 500 });
   }
 }
 
-export async function DELETE(
-  request: Request,
-  { params }: { params: { userId: string } }
-) {
+export async function DELETE(request: Request) {
   try {
+    const url = new URL(request.url);
+    const userId = url.pathname.split('/').filter(Boolean).pop();
+    if (!userId) {
+      return createApiResponse({ error: 'User ID is required', status: 400 });
+    }
     const user = await validateUser();
-    const { userId } = params;
-
     const { error } = await supabase
       .from('follows')
       .delete()
       .eq('user_id', userId)
       .eq('follower_id', user.id);
-
     if (error) throw error;
-
     return createApiResponse({ data: { success: true }, status: 200 });
   } catch (error) {
     return createApiResponse({ error: error instanceof Error ? error.message : String(error), status: 500 });
