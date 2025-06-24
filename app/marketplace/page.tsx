@@ -36,3 +36,5 @@ export default function MarketplacePage() {
     </MainLayout>
   );
 }
+
+// All marketplace routes are disabled in production except auth and feed.

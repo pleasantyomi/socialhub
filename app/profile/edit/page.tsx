@@ -7,13 +7,14 @@ export const metadata: Metadata = {
   description: "Edit your profile",
 };
 
-export default function EditProfilePage() {
-  return (
-    <MainLayout>
-      <div className="max-w-3xl mx-auto px-4 py-6">
-        <h1 className="text-2xl font-bold mb-6">Edit Profile</h1>
-        <ProfileEditForm />
-      </div>
-    </MainLayout>
-  );
-}
+// export default function EditProfilePage() {
+//   return (
+//     <MainLayout>
+//       <div className="max-w-3xl mx-auto px-4 py-6">
+//         <h1 className="text-2xl font-bold mb-6">Edit Profile</h1>
+//         <ProfileEditForm />
+//       </div>
+//     </MainLayout>
+//   );
+// }
+// All profile edit routes are disabled in production except auth and feed.

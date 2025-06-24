@@ -10,35 +10,36 @@ interface PostPageProps {
   params: Promise<{ id: string }>;
 }
 
-export default function PostPage({ params }: PostPageProps) {
-  const router = useRouter();
-  const [postId, setPostId] = useState<string>("");
-  const [loading, setLoading] = useState(true);
+// export default function PostPage({ params }: PostPageProps) {
+//   const router = useRouter();
+//   const [postId, setPostId] = useState<string>("");
+//   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function getParams() {
-      const resolvedParams = await params;
-      setPostId(resolvedParams.id);
-      setLoading(false);
-    }
-    getParams();
-  }, [params]);
+//   useEffect(() => {
+//     async function getParams() {
+//       const resolvedParams = await params;
+//       setPostId(resolvedParams.id);
+//       setLoading(false);
+//     }
+//     getParams();
+//   }, [params]);
 
-  if (loading) {
-    return (
-      <MainLayout>
-        <div className="max-w-3xl mx-auto px-4 py-6 flex justify-center">
-          <Loader2 className="h-8 w-8 animate-spin" />
-        </div>
-      </MainLayout>
-    );
-  }
+//   if (loading) {
+//     return (
+//       <MainLayout>
+//         <div className="max-w-3xl mx-auto px-4 py-6 flex justify-center">
+//           <Loader2 className="h-8 w-8 animate-spin" />
+//         </div>
+//       </MainLayout>
+//     );
+//   }
 
-  return (
-    <MainLayout>
-      <div className="max-w-3xl mx-auto px-4 py-6">
-        <PostDetail postId={postId} />
-      </div>
-    </MainLayout>
-  );
-}
+//   return (
+//     <MainLayout>
+//       <div className="max-w-3xl mx-auto px-4 py-6">
+//         <PostDetail postId={postId} />
+//       </div>
+//     </MainLayout>
+//   );
+// }
+// All post detail routes are disabled in production except auth and feed.

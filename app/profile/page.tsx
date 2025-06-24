@@ -8,13 +8,14 @@ export const metadata: Metadata = {
   description: "Your profile",
 };
 
-export default function ProfilePage() {
-  return (
-    <MainLayout>
-      <div className="max-w-4xl mx-auto px-4 py-6">
-        <ProfileHeader />
-        <ProfileTabs />
-      </div>
-    </MainLayout>
-  );
-}
+// export default function ProfilePage() {
+//   return (
+//     <MainLayout>
+//       <div className="max-w-4xl mx-auto px-4 py-6">
+//         <ProfileHeader />
+//         <ProfileTabs />
+//       </div>
+//     </MainLayout>
+//   );
+// }
+// All profile routes are disabled in production except auth and feed.

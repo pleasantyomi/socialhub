@@ -9,54 +9,55 @@ const messageSchema = z.object({
 });
 
 // GET messages for a conversation
-export async function GET(request: Request) {
-  try {
-    const session = await validateUser();
-    const { searchParams } = new URL(request.url);
-    const conversationId = searchParams.get('conversationId');
+// export async function GET(request: Request) {
+//   try {
+//     const session = await validateUser();
+//     const { searchParams } = new URL(request.url);
+//     const conversationId = searchParams.get('conversationId');
 
-    if (!conversationId) {
-      // Get all conversations for the user
-      const conversations = await getConversations(session.user.id);
-      return NextResponse.json(conversations);
-    }
+//     if (!conversationId) {
+//       // Get all conversations for the user
+//       const conversations = await getConversations(session.user.id);
+//       return NextResponse.json(conversations);
+//     }
 
-    // Get messages for specific conversation
-    const messages = await getMessages(conversationId);
-    return NextResponse.json(messages);
-  } catch (error) {
-    return NextResponse.json(
-      { error: 'Failed to fetch messages' },
-      { status: 500 }
-    );
-  }
-}
+//     // Get messages for specific conversation
+//     const messages = await getMessages(conversationId);
+//     return NextResponse.json(messages);
+//   } catch (error) {
+//     return NextResponse.json(
+//       { error: 'Failed to fetch messages' },
+//       { status: 500 }
+//     );
+//   }
+// }
 
 // SEND a new message
-export async function POST(request: Request) {
-  try {
-    const session = await validateUser();
-    const json = await request.json();
+// export async function POST(request: Request) {
+//   try {
+//     const session = await validateUser();
+//     const json = await request.json();
     
-    const validatedData = messageSchema.parse(json);
+//     const validatedData = messageSchema.parse(json);
     
-    const message = await sendMessage({
-      ...validatedData,
-      sender_id: session.user.id,
-    });
+//     const message = await sendMessage({
+//       ...validatedData,
+//       sender_id: session.user.id,
+//     });
 
-    return NextResponse.json(message, { status: 201 });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Invalid message data', details: error.errors },
-        { status: 400 }
-      );
-    }
+//     return NextResponse.json(message, { status: 201 });
+//   } catch (error) {
+//     if (error instanceof z.ZodError) {
+//       return NextResponse.json(
+//         { error: 'Invalid message data', details: error.errors },
+//         { status: 400 }
+//       );
+//     }
 
-    return NextResponse.json(
-      { error: 'Failed to send message' },
-      { status: 500 }
-    );
-  }
-}
+//     return NextResponse.json(
+//       { error: 'Failed to send message' },
+//       { status: 500 }
+//     );
+//   }
+// }
+// All messages API routes are disabled in production except auth and feed.
