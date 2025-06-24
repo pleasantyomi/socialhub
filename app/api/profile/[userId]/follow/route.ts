@@ -2,13 +2,14 @@ import { NextResponse } from 'next/server';
 import { createApiResponse, validateUser } from '@/lib/api-utils';
 import { supabase } from '@/lib/supabase';
 
-export async function GET(
-  request: Request,
-  { params }: { params: { userId: string } }
-) {
+export async function GET(request: Request) {
   try {
+    const url = new URL(request.url);
+    const userId = url.pathname.split('/').filter(Boolean).pop();
+    if (!userId) {
+      return createApiResponse({ error: 'User ID is required', status: 400 });
+    }
     const user = await validateUser();
-    const { userId } = params;
 
     // Check if the current user is following the target user
     const { data: followData, error: followError } = await supabase
