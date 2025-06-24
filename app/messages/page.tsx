@@ -35,3 +35,4 @@ export const metadata: Metadata = {
 //   );
 // }
 // All messages routes are disabled in production except auth and feed.
+//all messages are disabled in profuction except auth and feed.
