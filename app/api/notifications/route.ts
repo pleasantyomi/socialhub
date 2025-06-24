@@ -8,7 +8,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
-    const type = searchParams.get('type') as Notification | null;
+    const type = searchParams.get('type') as string | null;
 
     const where = {
       userId: session!.user!.id,
@@ -105,7 +105,7 @@ export async function POST(request: Request) {
     const notification = await prisma.notification.create({
       data: {
         userId,
-        type: type as Notification,
+        type: type || undefined,
         targetId,
         content,
         read: false,
