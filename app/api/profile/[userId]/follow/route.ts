@@ -16,7 +16,7 @@ export async function GET(request: Request) {
       .from('follows')
       .select('user_id')
       .eq('user_id', userId)
-      .eq('follower_id', user.id)
+      .eq('follower_id', user.user.id)
       .single();
 
     if (followError && followError.code !== 'PGRST116') throw followError;
@@ -49,14 +49,14 @@ export async function POST(request: Request) {
       return createApiResponse({ error: 'User ID is required', status: 400 });
     }
     const user = await validateUser();
-    if (userId === user.id) {
+    if (userId === user.user.id) {
       throw new Error('Cannot follow yourself');
     }
     const { data, error } = await supabase
       .from('follows')
       .insert({
         user_id: userId,
-        follower_id: user.id
+        follower_id: user.user.id
       })
       .select()
       .single();
@@ -79,7 +79,7 @@ export async function DELETE(request: Request) {
       .from('follows')
       .delete()
       .eq('user_id', userId)
-      .eq('follower_id', user.id);
+      .eq('follower_id', user.user.id);
     if (error) throw error;
     return createApiResponse({ data: { success: true }, status: 200 });
   } catch (error) {
