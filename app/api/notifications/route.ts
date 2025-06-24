@@ -1,6 +1,5 @@
 import prisma from '@/lib/prisma';
 import { createApiResponse, handleApiError, validateUser } from '@/lib/api-utils';
-import { NotificationType } from '@/lib/types';
 
 // GET notifications
 export async function GET(request: Request) {
@@ -9,7 +8,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
-    const type = searchParams.get('type') as NotificationType | null;
+    const type = searchParams.get('type') as Notification | null;
 
     const where = {
       userId: session!.user!.id,
@@ -106,7 +105,7 @@ export async function POST(request: Request) {
     const notification = await prisma.notification.create({
       data: {
         userId,
-        type: type as NotificationType,
+        type: type as Notification,
         targetId,
         content,
         read: false,
