@@ -9,17 +9,17 @@ const updatePostSchema = z.object({
 });
 
 // GET a single post
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: Request) {
   try {
-    const post = await getPost(params.id);
-    
+    const url = new URL(request.url);
+    const id = url.pathname.split('/').filter(Boolean).pop();
+    if (!id) {
+      return NextResponse.json({ error: 'Post ID is required' }, { status: 400 });
+    }
+    const post = await getPost(id);
     if (!post) {
       return NextResponse.json({ error: 'Post not found' }, { status: 404 });
     }
-
     return NextResponse.json(post);
   } catch (error) {
     return NextResponse.json(
