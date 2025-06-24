@@ -16,6 +16,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { getMessages, sendMessage } from "@/lib/data";
+import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import type { Message } from "@/lib/types";
 import { formatDistanceToNow } from "date-fns";
