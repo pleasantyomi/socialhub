@@ -9,6 +9,13 @@ export const metadata: Metadata = {
 };
 
 export default function MessagesPage() {
+  // Dummy props to prevent build errors
+  const dummyConversationId = "demo-convo-id";
+  const dummyOtherUser = {
+    id: "demo-user-id",
+    full_name: "Demo User",
+    avatar_url: "/placeholder.svg",
+  };
   return (
     <MainLayout>
       <div className="max-w-7xl mx-auto h-[calc(100vh-3.5rem)]">
@@ -17,7 +24,10 @@ export default function MessagesPage() {
             <MessageSidebar />
           </div>
           <div className="md:col-span-3">
-            <MessageThread />
+            <MessageThread
+              conversationId={dummyConversationId}
+              otherUser={dummyOtherUser}
+            />
           </div>
         </div>
       </div>
