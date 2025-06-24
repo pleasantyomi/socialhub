@@ -87,6 +87,8 @@ export async function PUT(request: Request) {
   } catch (error: any) {
     return handleApiError(error);
   }
+}
+
 // Create a notification
 export async function POST(request: Request) {
   try {

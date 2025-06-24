@@ -42,10 +42,6 @@ export default function PostPage({ params }: PostPageProps) {
     </MainLayout>
   );
 }
-      </div>
-    </MainLayout>
-  );
-}
 
 export async function POST(request: Request) {
   try {
