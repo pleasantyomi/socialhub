@@ -2,3 +2,12 @@ ignoredBuiltDependencies:
   - '@prisma/client'
   - '@prisma/engines'
   - prisma
+
+packages:
+  - 'app'
+  - 'components'
+  - 'lib'
+  - 'prisma'
+  - 'public'
+  - 'supabase'
+  - 'types'
