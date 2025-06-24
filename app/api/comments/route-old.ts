@@ -44,8 +44,9 @@ export async function POST(request: Request) {
     const validatedData = commentSchema.parse(json);
     
     const comment = await createCommentSupabase({
-      ...validatedData,
+      post_id: validatedData.postId,
       author_id: session.user.id,
+      content: validatedData.content,
     });
 
     return createApiResponse({
@@ -65,10 +66,5 @@ export async function POST(request: Request) {
       error: 'Failed to create comment',
       status: 500,
     });
-  }
-
-    return NextResponse.json(comment);
-  } catch (error) {
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

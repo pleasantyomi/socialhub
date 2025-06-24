@@ -65,6 +65,7 @@ export default function MessageThread({
     }
   };
 
+  useEffect(() => {
     // Subscribe to new messages
     const channel = supabase
       .channel(`messages:${conversationId}`)

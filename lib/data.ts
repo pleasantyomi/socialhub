@@ -183,3 +183,12 @@ export async function followUser(currentUserId: string, targetUserId: string): P
 export async function unfollowUser(currentUserId: string, targetUserId: string): Promise<void> {
   return api.unfollowUser(targetUserId);
 }
+
+// Dummy implementations to prevent build errors
+export function getUserPosts() {
+  return [];
+}
+
+export function getUserLikedPosts() {
+  return [];
+}
