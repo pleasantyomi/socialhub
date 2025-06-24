@@ -80,4 +80,6 @@ const ioHandler = async (req: NextApiRequest, res: NextApiResponseServerIO) => {
   res.end();
 };
 
-export default ioHandler;
+// Remove all exports except config, and add a dummy handler to satisfy Next.js
+export const GET = () => new Response('Socket route placeholder', { status: 200 });
+export const POST = GET;
