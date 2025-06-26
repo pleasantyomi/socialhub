@@ -23,8 +23,6 @@ export function useToast() {
 
   return { toast };
 }
-<<<<<<< Updated upstream
 
 export { toast } from "sonner";
-=======
->>>>>>> Stashed changes
+
