@@ -109,11 +109,7 @@ export default function MessageThread({
       if (error) throw error;
       setNewMessage("");
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to send message",
-        variant: "destructive",
-      });
+      toast.error("Failed to send message");
     }
   };
 

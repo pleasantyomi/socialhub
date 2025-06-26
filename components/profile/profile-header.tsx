@@ -22,19 +22,40 @@ export default function ProfileHeader({ userId }: ProfileHeaderProps) {
   const [loading, setLoading] = useState(true);
   
   const targetUserId = userId || session?.user?.id;
+  const isOwnProfile = !userId || userId === session?.user?.id;
+
   useEffect(() => {
-    loadProfile();
-  }, [targetUserId]);
+    if (session?.user) {
+      loadProfile();
+    }
+  }, [targetUserId, session]);
 
   async function loadProfile() {
-    if (!targetUserId) return;
+    if (!targetUserId) {
+      setLoading(false);
+      return;
+    }
     
     try {
       const fetchedProfile = await getProfile(targetUserId);
       setProfile(fetchedProfile);
     } catch (error) {
       console.error('Failed to load profile:', error);
-      toast.error("Failed to load profile.");
+      // If API fails, create a basic profile from session data
+      if (isOwnProfile && session?.user) {
+        setProfile({
+          id: session.user.id,
+          username: session.user.name || session.user.email?.split('@')[0] || 'User',
+          full_name: session.user.name || '',
+          avatar_url: session.user.image || null,
+          bio: null,
+          website: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        });
+      } else {
+        toast.error("Failed to load profile.");
+      }
     } finally {
       setLoading(false);
     }
@@ -59,8 +80,6 @@ export default function ProfileHeader({ userId }: ProfileHeaderProps) {
       </Card>
     );
   }
-
-  const isOwnProfile = session?.user?.id === profile.id;
 
   return (
     <Card>

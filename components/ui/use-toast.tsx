@@ -1,8 +1,30 @@
 "use client";
 
-// import * as React from "react";
-// import { cn } from "@/lib/utils";
-import { toast } from "sonner";
+import { toast as sonnerToast } from 'sonner';
 
-export { toast };
+type ToastProps = {
+  title: string;
+  description?: string;
+  variant?: 'default' | 'destructive';
+};
 
+export function useToast() {
+  const toast = ({ title, description, variant = 'default' }: ToastProps) => {
+    if (variant === 'destructive') {
+      sonnerToast.error(title, {
+        description,
+      });
+    } else {
+      sonnerToast(title, {
+        description,
+      });
+    }
+  };
+
+  return { toast };
+}
+<<<<<<< Updated upstream
+
+export { toast } from "sonner";
+=======
+>>>>>>> Stashed changes

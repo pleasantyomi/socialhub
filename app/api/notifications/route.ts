@@ -1,7 +1,9 @@
-import prisma from '@/lib/prisma';
+import { supabase } from '@/lib/supabase';
 import { createApiResponse, handleApiError, validateUser } from '@/lib/api-utils';
 
-// GET notifications
+// Note: Using Supabase instead of Prisma for consistency with the rest of the app
+
+// GET notifications - disabled for now
 // export async function GET(request: Request) {
 //   try {
 //     const session = await validateUser();
@@ -10,43 +12,42 @@ import { createApiResponse, handleApiError, validateUser } from '@/lib/api-utils
 //     const limit = parseInt(searchParams.get('limit') || '20');
 //     const type = searchParams.get('type') as string | null;
 
-//     const where = {
-//       userId: session!.user!.id,
-//       ...(type ? { type } : {}),
-//     };
+//     const query = supabase
+//       .from('notifications')
+//       .select('*')
+//       .eq('user_id', session.user.id)
+//       .order('created_at', { ascending: false })
+//       .range((page - 1) * limit, page * limit - 1);
 
-//     const [notifications, total] = await Promise.all([
-//       prisma.notification.findMany({
-//         where,
-//         include: {
-//           user: true,
-//         },
-//         orderBy: {
-//           createdAt: 'desc',
-//         },
-//         skip: (page - 1) * limit,
-//         take: limit,
-//       }),
-//       prisma.notification.count({ where }),
-//     ]);
+//     if (type) {
+//       query.eq('type', type);
+//     }
 
-//     const unreadCount = await prisma.notification.count({
-//       where: {
-//         userId: session!.user!.id,
-//         read: false,
-//       },
-//     });
+//     const { data: notifications, error } = await query;
+
+//     if (error) throw error;
+
+//     const { count } = await supabase
+//       .from('notifications')
+//       .select('*', { count: 'exact', head: true })
+//       .eq('user_id', session.user.id);
+
+//     const { count: unreadCount } = await supabase
+//       .from('notifications')
+//       .select('*', { count: 'exact', head: true })
+//       .eq('user_id', session.user.id)
+//       .eq('read', false);
 
 //     return createApiResponse({
 //       data: {
 //         notifications,
 //         pagination: {
-//           total,
-//           pages: Math.ceil(total / limit),
+//           total: count || 0,
+//           pages: Math.ceil((count || 0) / limit),
 //           current: page,
 //           limit,
 //         },
-//         unreadCount,
+//         unreadCount: unreadCount || 0,
 //       },
 //       status: 200,
 //     });
@@ -69,15 +70,13 @@ export async function PUT(request: Request) {
       });
     }
 
-    await prisma.notification.updateMany({
-      where: {
-        id: { in: notificationIds },
-        userId: session!.user!.id,
-      },
-      data: {
-        read: true,
-      },
-    });
+    const { error } = await supabase
+      .from('notifications')
+      .update({ read: true })
+      .in('id', notificationIds)
+      .eq('user_id', session.user.id);
+
+    if (error) throw error;
 
     return createApiResponse({
       data: { success: true },
@@ -88,7 +87,7 @@ export async function PUT(request: Request) {
   }
 }
 
-// Create a notification
+// Create a notification - disabled for now
 // export async function POST(request: Request) {
 //   try {
 //     const session = await validateUser();
@@ -102,18 +101,19 @@ export async function PUT(request: Request) {
 //       });
 //     }
 
-//     const notification = await prisma.notification.create({
-//       data: {
-//         userId,
-//         type: type || undefined,
-//         targetId,
+//     const { data: notification, error } = await supabase
+//       .from('notifications')
+//       .insert({
+//         user_id: userId,
+//         type,
+//         reference_id: targetId,
 //         content,
 //         read: false,
-//       },
-//       include: {
-//         user: true,
-//       },
-//     });
+//       })
+//       .select('*')
+//       .single();
+
+//     if (error) throw error;
 
 //     return createApiResponse({
 //       data: notification,

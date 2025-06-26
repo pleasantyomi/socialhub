@@ -61,10 +61,14 @@ export default function AuthPage() {
         body: JSON.stringify({ email, password, name }),
       })
 
+      const responseData = await response.json()
+
       if (!response.ok) {
-        const error = await response.text()
-        throw new Error(error)
+        throw new Error(responseData.error || 'Signup failed')
       }
+
+      // Show success message
+      toast.success("Account created successfully! Logging you in...")
 
       // After successful signup, log the user in
       const result = await signIn('credentials', {

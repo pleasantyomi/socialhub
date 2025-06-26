@@ -19,6 +19,7 @@ export default function SidebarRight() {
   useEffect(() => {
     async function loadData() {
       try {
+        setLoading(true);
         const [topics, users] = await Promise.all([
           getTrendingTopics(),
           getSuggestedUsers(session?.user?.id),

@@ -3,6 +3,7 @@ import GoogleProvider from 'next-auth/providers/google';
 import GithubProvider from 'next-auth/providers/github';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { supabase } from '@/lib/supabase';
+import bcrypt from 'bcryptjs';
 
 export const authOptions: NextAuthOptions = {
   pages: {
@@ -49,70 +50,99 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Invalid credentials');
         }
 
-        const { data: { user }, error } = await supabase.auth.signInWithPassword({
-          email: credentials.email,
-          password: credentials.password,
-        });
+        try {
+          // Try to authenticate with Supabase first
+          const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+            email: credentials.email,
+            password: credentials.password,
+          });
 
-        if (error || !user) {
+          if (authData?.user && !authError) {
+            // Get user profile from Supabase
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', authData.user.id)
+              .single();
+
+            return {
+              id: authData.user.id,
+              email: authData.user.email!,
+              name: profile?.full_name || authData.user.user_metadata?.name || credentials.email,
+              image: profile?.avatar_url || authData.user.user_metadata?.avatar_url,
+            };
+          }
+
+          // Fallback to in-memory store for demo/development
+          const { userStore } = await import('@/lib/user-store');
+          const user = userStore.findByEmail(credentials.email);
+          
+          if (!user) {
+            throw new Error('No user found');
+          }
+
+          // Check password (in production, compare hashed passwords)
+          const isValid = user.password === credentials.password || 
+                          await bcrypt.compare(credentials.password, user.password).catch(() => false);
+
+          if (!isValid) {
+            throw new Error('Invalid password');
+          }
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            image: user.image,
+          };
+        } catch (error) {
+          console.error('Auth error:', error);
           throw new Error('Invalid credentials');
         }
-
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: profile?.full_name,
-          image: profile?.avatar_url,
-        };
       }
     }),
   ],
   callbacks: {
     async signIn({ user, account, profile }) {
-      if (account?.provider === 'google' || account?.provider === 'github') {
+      // Handle OAuth sign-ins (Google, GitHub)
+      if (account?.provider !== 'credentials' && user.email) {
         try {
-          // Check if user exists in profiles
+          // Check if user exists in Supabase
           const { data: existingProfile } = await supabase
             .from('profiles')
-            .select('*')
+            .select('id')
             .eq('id', user.id)
             .single();
 
           if (!existingProfile) {
-            // Create new profile for social login users
-            const { error: profileError } = await supabase
+            // Create profile for OAuth users
+            const username = user.email.split('@')[0] + '_' + Math.random().toString(36).substr(2, 4);
+            
+            const { error } = await supabase
               .from('profiles')
               .insert({
                 id: user.id,
-                email: user.email,
-                full_name: user.name,
-                username: (user.email || '').split('@')[0],
-                avatar_url: user.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.email || '')}`,
-                created_at: new Date().toISOString(),
+                username,
+                full_name: user.name || user.email,
+                avatar_url: user.image,
               });
 
-            if (profileError) {
-              console.error('Error creating profile:', profileError);
-              return false;
+            if (error) {
+              console.error('Error creating OAuth user profile:', error);
+              // Don't block login if profile creation fails
             }
           }
         } catch (error) {
-          console.error('Error in signIn callback:', error);
-          return false;
+          console.error('OAuth sign-in error:', error);
+          // Don't block login if database operations fail
         }
       }
+      
       return true;
     },
     async jwt({ token, user, account }) {
       if (user) {
         token.id = user.id;
-        // Store the provider to handle token refresh for social logins
         if (account) {
           token.provider = account.provider;
         }
@@ -122,18 +152,6 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (session?.user) {
         session.user.id = token.id as string;
-        
-        // Fetch latest profile data
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', token.id)
-          .single();
-
-        if (profile) {
-          session.user.name = profile.full_name;
-          session.user.image = profile.avatar_url;
-        }
       }
       return session;
     },

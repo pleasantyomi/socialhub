@@ -38,17 +38,26 @@ const demoItems = [
 ] as MarketplaceItem[];
 
 type MarketplaceGridProps = {
-	filters: MarketplaceFilters;
+	filters?: MarketplaceFilters;
+	items?: any[]; // Allow custom items to be passed
 };
 
-export default function MarketplaceGrid({ filters }: MarketplaceGridProps) {
-	const [items, setItems] = useState<MarketplaceItem[]>(demoItems);
-	const [loading, setLoading] = useState(true);
+export default function MarketplaceGrid({ filters, items: customItems }: MarketplaceGridProps) {
+	const [items, setItems] = useState<MarketplaceItem[]>(customItems as MarketplaceItem[] || demoItems);
+	const [loading, setLoading] = useState(!customItems);
+	
 	useEffect(() => {
+		if (customItems) {
+			setItems(customItems as MarketplaceItem[]);
+			setLoading(false);
+			return;
+		}
 		loadItems();
-	}, [filters]);
+	}, [filters, customItems]);
 
 	async function loadItems() {
+		if (!filters) return;
+		
 		try {
 			const fetchedItems = await getMarketplaceItems(filters);
 			setItems(fetchedItems);
@@ -63,6 +72,8 @@ export default function MarketplaceGrid({ filters }: MarketplaceGridProps) {
 	// Apply filters to items
 	const filteredItems = items
 		.filter((item) => {
+			if (!filters) return true;
+			
 			if (
 				filters.search &&
 				!item.title.toLowerCase().includes(filters.search.toLowerCase())
@@ -81,6 +92,8 @@ export default function MarketplaceGrid({ filters }: MarketplaceGridProps) {
 			return true;
 		})
 		.sort((a, b) => {
+			if (!filters) return 0;
+			
 			switch (filters.sortBy) {
 				case "price_low":
 					return a.price - b.price;

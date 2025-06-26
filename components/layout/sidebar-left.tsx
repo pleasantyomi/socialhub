@@ -26,10 +26,12 @@ export default function SidebarLeft() {
             Profile
           </Button>
         </Link>
-        <Button variant="ghost" className="w-full justify-start">
-          <MessageSquare className="mr-2 h-4 w-4" />
-          Messages
-        </Button>
+        <Link href="/messages">
+          <Button variant="ghost" className="w-full justify-start">
+            <MessageSquare className="mr-2 h-4 w-4" />
+            Messages
+          </Button>
+        </Link>
         <Button variant="ghost" className="w-full justify-start">
           <Users className="mr-2 h-4 w-4" />
           Friends

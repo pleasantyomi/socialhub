@@ -55,28 +55,51 @@ export async function api<T = any>(endpoint: string, options: ApiOptions = {}): 
 
 // Posts API
 export async function fetchPosts(page = 1, limit = 10) {
-  return api('/posts', {
-    cache: 'no-store',
-  });
+  try {
+    const response = await api('/posts', {
+      cache: 'no-store',
+    });
+    return response.data || [];
+  } catch (error) {
+    console.error('API Error fetching posts:', error);
+    throw error;
+  }
 }
 
 export async function createPost(content: string, image?: string) {
-  return api('/posts', {
-    method: 'POST',
-    body: { content, image }
-  });
+  try {
+    const response = await api('/posts', {
+      method: 'POST',
+      body: { content, image }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('API Error creating post:', error);
+    throw error;
+  }
 }
 
 export async function likePost(postId: string) {
-  return api(`/posts/${postId}/like`, {
-    method: 'POST'
-  });
+  try {
+    const response = await api(`/posts/${postId}/like`, {
+      method: 'POST'
+    });
+    return response.data;
+  } catch (error) {
+    console.error('API Error liking post:', error);
+    throw error;
+  }
 }
 
 export async function unlikePost(postId: string) {
-  return api(`/posts/${postId}/like`, {
-    method: 'DELETE'
-  });
+  try {
+    await api(`/posts/${postId}/like`, {
+      method: 'DELETE'
+    });
+  } catch (error) {
+    console.error('API Error unliking post:', error);
+    throw error;
+  }
 }
 
 // Comments API
@@ -98,6 +121,7 @@ export async function fetchPost(postId: string) {
 
 // Profile API
 export async function fetchProfile(userId: string) {
+  // If userId is 'me', the API will return the current user's profile
   return api(`/profile/${userId}`);
 }
 
